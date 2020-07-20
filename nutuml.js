@@ -188,6 +188,29 @@ var NutUml;
         ctx.lineTo(item.toX,item.toY);
         ctx.stroke();
         ctx.fill();
+        _drawArrow(ctx,item.toX,item.toY,item.x>item.toX);
+    }
+    function _drawArrow(ctx, x,y,reverse) { 
+        var xDelta =-10;
+        var xDelta2 =-6;
+        var yDelta =-5;
+        if(reverse){
+            xDelta = 0 -xDelta;
+            xDelta2 = 0- xDelta2;
+            yDelta = 0- yDelta;
+        }
+        
+        ctx.save(); 
+        ctx.beginPath(); 
+        ctx.moveTo(x, y); 
+        ctx.lineTo(x + xDelta, y+yDelta); 
+        ctx.lineTo(x+xDelta2, y); 
+        
+        ctx.lineTo(x + xDelta, y-yDelta); 
+        ctx.lineTo(x,y);
+        ctx.stroke(); 
+        ctx.fill();
+        ctx.restore(); 
     }
     NutUml = function (el) {
         this.context = el.getContext("2d");
@@ -217,6 +240,8 @@ var NutUml;
         _drawHeader(ctx,secObj);
         _drawLines(ctx,secObj);
 
+        
+
         // _rectangle(ctx,10,100,"Tom");
         // console.log(ctx.lineWidth);
         
@@ -226,8 +251,10 @@ var NutUml;
 
         // ctx.fillText("Hello",59,66);
 
-        // ctx.moveTo(33,70);
-        // ctx.lineTo(123,70);
+         ctx.moveTo(100,200);
+         ctx.lineTo(200,200);
+         ctx.stroke();
+         _drawArrow(ctx,200,200);
         // ctx.stroke();
         // ctx.fill();
 
