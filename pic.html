@@ -6,18 +6,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="nutuml.js"></script>
     <title>时序图</title>
+    <style>
+        main {
+            /*对子元素开启弹性布局*/
+            display: flex;
+            /*弹性元素在必要的时候换行*/
+            flex-wrap: wrap;
+            /*将弹性元素居中*/
+            justify-content: center;
+        }
+        
+        textarea,
+        button {
+            font-family: 'Noto Serif SC', STFangSong, serif;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
+    <main>
+        <textarea name="input" rows="15" cols="40"></textarea>
+        <textarea name="output" rows="15" cols="40"></textarea>
+        <button name="compile">Lexical Analysis</button>
+    </main>
 <canvas id="myCanvas" width="1000" height="800" style="border:1px solid #c3c3c3;">
     Your browser does not support the canvas element.
 </canvas>
     
 <script type="text/javascript">
+let inputBox = document.querySelector("textarea[name=input]");
+let outputBox = document.querySelector("textarea[name=output]");
+let btnCompile = document.querySelector("button[name=compile]");
 var c=document.getElementById("myCanvas");
 
+btnCompile.addEventListener("click", event => {
+    outputBox.value = "";
+    let inputCode = inputBox.value;
+    c.height = c.height; // 清空画布
+    var uml = new NutUml(c);
+    var arr = uml.analysis(inputCode);
+    outputBox.value = JSON.stringify(arr);
+    uml.drawUml();
+});
 
-var uml = new NutUml(c);
-uml.drawUml();
+
+
+
 </script>
 </body>
 </html>

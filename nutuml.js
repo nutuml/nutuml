@@ -9,7 +9,12 @@ var NutUml;
     var pagePadding = 10;
     var lineHeight = fontSize + linePadding;
 
-    
+    const reservedWords = ['if', 'int', 'for', 'while', 'do', 'return', 'break', 'continue'];
+    const operators = ['-','>','<','->', '-->'];
+    const separators = [':'];
+    const newLines = ['\r','\n'];
+
+            
     function _dashedLine(context,startX,startY,toX, toY, dashLength){
         dashLength = dashLength === 0 || dashLength === undefined ?
             dashLength = 5 : dashLength = dashLength;
@@ -212,9 +217,44 @@ var NutUml;
         ctx.fill();
         ctx.restore(); 
     }
+    function _getObj(tokens){
+        var obj = {
+            header : [],
+            lines : [],
+            innerHeight:0
+        };
+        var len = tokens.length;
+        var cur =0;
+        var headerArr = [];
+        while(cur<len){
+            var item = tokens[cur++];
+            if(item.type==2){
+                if(!headerArr.includes(item.value)){
+                    obj.header.push({name:item.value,title:item.value});
+                    headerArr.push(item.value);
+                }
+                cur++;
+                var toItem = tokens[cur++];
+                if(!headerArr.includes(toItem.value)){
+                    obj.header.push({name:toItem.value,title:toItem.value});
+                    headerArr.push(toItem.value);
+                }
+                var sepItem = tokens[cur++];
+                if(sepItem.type==5){
+                    var messageItem = tokens[cur];
+                    obj.lines.push({from:item.value, to: toItem.value, message: messageItem.value})
+                }else{
+                    obj.lines.push({from:item.value, to: toItem.value, message: ""})
+                }
+            }
+        }
+        return obj;
+    }
     NutUml = function (el) {
         this.context = el.getContext("2d");
+        this.tokens = [];
     };
+    
 
     NutUml.prototype.drawUml = function(){
         var ctx= this.context;
@@ -229,6 +269,9 @@ var NutUml;
             ],
             innerHeight:0
         };
+        secObj = _getObj(this.tokens);
+        debugger;
+        console.log(secObj)
 
         ctx.lineWidth=1;
         ctx.translate(0.5,0.5);
@@ -239,31 +282,75 @@ var NutUml;
         _calcLinesXY(secObj);
         _drawHeader(ctx,secObj);
         _drawLines(ctx,secObj);
+    };
 
-        
+    NutUml.prototype.analysis = function(str) {
+        /**
+         * current用于标识当前字符位置,
+         * str[cur]即为当前字符
+         */
+        let cur = 0;
+        /**
+         * tokens存储词法分析的最终结果
+         */
+        let tokens = [];
 
-        // _rectangle(ctx,10,100,"Tom");
-        // console.log(ctx.lineWidth);
-        
+        while(cur < str.length) {
 
-        // _dashedLine(ctx,33,34,33,100)
-        // _dashedLine(ctx,123,34,123,100)
+            if(/\s/.test(str[cur])) { // 跳过空格
+                cur++;
+            } else if(/[a-z0-9]/i.test(str[cur])) { // 读单词
+                
+                let word = "" + str[cur++];
+                // 测试下一位字符,如果不是字母直接进入下一次循环(此时cur已经右移)
+                // 如果是则继续读字母,并将cur向右移动
+                while(cur < str.length && /[a-z0-9]/i.test(str[cur])) {
+                    // cur < str.length防止越界
+                    word += str[cur++];
+                }
+                if(reservedWords.includes(word)) {
+                    tokens.push({
+                        type: 1,
+                        value: word,
+                    }); // 存储保留字(关键字)
+                } else {
+                    tokens.push({
+                        type: 2,
+                        value: word,
+                    }); // 存储普通单词                            
+                }
+            } else if(separators.includes(str[cur])) {
+                tokens.push({
+                    type: 5,
+                    value: str[cur++],
+                }); // 存储分隔符并将cur向右移动
+                
+                let word = "";
+                // 测试下一位字符,如果是换行进入下一次循环
+                // 如果不是则继续读字符,并将cur向右移动
+                while(cur < str.length && !newLines.includes(str[cur])) {
+                    word += str[cur++];
+                }
+                tokens.push({
+                    type: 3,
+                    value: word,
+                }); 
+            } else if(operators.includes(str[cur])) {
+                let operator = "" + str[cur++];
+                while(cur < str.length && operators.includes(str[cur])) {
+                    operator += str[cur++];
+                }
+                tokens.push({
+                    type: 4,
+                    value: operator,
+                }); // 存储运算符                        
+            } else {
+                return "包含非法字符：" + str[cur];
+            }
 
-        // ctx.fillText("Hello",59,66);
-
-         ctx.moveTo(100,200);
-         ctx.lineTo(200,200);
-         ctx.stroke();
-         _drawArrow(ctx,200,200);
-        // ctx.stroke();
-        // ctx.fill();
-
-        // drawArrow(ctx, 33,50, 122, 50,30,10,2,'black')
-
-        // _rectangle(ctx,100,10,"Bob");
-        // _rectangle(ctx,100,100,"Bob");
-
-       
+        }
+        this.tokens = tokens;
+        return tokens;
     };
 
 })()
