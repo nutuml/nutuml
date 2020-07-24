@@ -134,7 +134,12 @@ var NutUml;
                 preItem.lineX = preItem.x + preItem.width/2;
                 preItem.lineY = preItem.y + preItem.height;
             }
-            item.x = preItem.x + arr[preItem.name + "_" + item.name];
+            var val = preItem.name + "_" + item.name;
+            if(arr.includes(val)){
+                item.x = preItem.x + arr[val];
+            }else{
+                item.x = preItem.x + minWidth;
+            }
             item.y = pagePadding;
             item.lineX = item.x + item.width/2;
             item.lineY = item.y + item.height;
@@ -187,7 +192,7 @@ var NutUml;
         }
     }
     function _line(ctx,item){
-        ctx.fillText(item.message,item.x,item.y);
+        ctx.fillText(item.message,Math.min(item.x,item.toX) + 10,item.y-5);
 
         ctx.moveTo(item.x,item.y);
         ctx.lineTo(item.toX,item.toY);
