@@ -1,5 +1,30 @@
-# nutuml
-a tool to generate UML diagram
+# NutUml
+A tool to generate UML diagram via text. Currently it's version 0.1.
 
+A generated UML secquence are as follow:
 ![avatar](http://7niu.genlei.cn/nutuml.png)
 
+## Get Start
+
+We describe the upper image by:
+```
+Client -> Server : Request
+Server -> Client : Response
+```
+You can use the follow Code to try. Remember download nutuml.js to your local.
+
+```
+<script src="nutuml.js"></script>
+<canvas id="myCanvas" style="border:1px solid #c3c3c3;">
+    Your browser does not support the canvas element.
+</canvas>
+    
+<script type="text/javascript">
+var c=document.getElementById("myCanvas");
+var umlText = "Client -> Server : Request\n"
+    + "Server -> Client : Response";
+var uml = new NutUml(c);
+uml.drawUml(umlText);
+</script>
+```
+Thank you!
