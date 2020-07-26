@@ -90,6 +90,7 @@ var NutUml;
         ctx.fill();
     }
     function _calcHeaderSize(context,header){
+        context.font = font;
         var len = header.length;
         var pw = paddingWidth;
         var ph = paddingHeight;
@@ -101,6 +102,7 @@ var NutUml;
         }
     }
     function _calcLineSize(context,lines){
+        context.font = font;
         var len = lines.length;
         var pw = paddingWidth;
 
@@ -111,10 +113,11 @@ var NutUml;
         }
     }
     function _calcHeaderXY(obj){
-        obj.innerHeight = obj.lines.length * lineHeight;
+        obj.innerHeight = 0;
         var len = obj.header.length;
         var arr = [];
         var minWidth = 100;
+        var maxHeight = 0;
         for(var j=0;j<obj.lines.length;j++){
             var item = obj.lines[j];
             var t = item.from + "_" + item.to;
@@ -124,6 +127,11 @@ var NutUml;
             if(arr[t]<minWidth){
                 arr[t]=minWidth;
             }
+            console.log(t + "=" + arr[t])
+            obj.innerHeight += item.height
+        }
+        for(var i=0;i<len;i++){
+            maxHeight = Math.max(obj.header[i].height,maxHeight);
         }
         for(var i=1;i<len;i++){
             var item = obj.header[i];
@@ -135,15 +143,16 @@ var NutUml;
                 preItem.lineY = preItem.y + preItem.height;
             }
             var val = preItem.name + "_" + item.name;
-            if(arr.includes(val)){
-                item.x = preItem.x + arr[val];
-            }else{
-                item.x = preItem.x + minWidth;
-            }
+            var val2 = item.name + "_" + preItem.name;
+            var span = Math.max(arr[val],arr[val2],minWidth);
+            item.x = preItem.x + span;
+            
             item.y = pagePadding;
             item.lineX = item.x + item.width/2;
             item.lineY = item.y + item.height;
         }
+        obj.height = Math.ceil(lineHeight + obj.innerHeight + maxHeight*2 + pagePadding*2);
+        obj.width = Math.ceil(obj.header[len-1].x + obj.header[len-1].width + pagePadding) ; 
     }
     function _calcLinesXY(obj){
         var curY = pagePadding + obj.header[0].height;
@@ -192,6 +201,7 @@ var NutUml;
         }
     }
     function _line(ctx,item){
+        ctx.font= font;
         ctx.fillText(item.message,Math.min(item.x,item.toX) + 10,item.y-5);
 
         ctx.moveTo(item.x,item.y);
@@ -201,8 +211,8 @@ var NutUml;
         _drawArrow(ctx,item.toX,item.toY,item.x>item.toX);
     }
     function _drawArrow(ctx, x,y,reverse) { 
-        var xDelta =-10;
-        var xDelta2 =-6;
+        var xDelta =-12;
+        var xDelta2 =-7;
         var yDelta =-5;
         if(reverse){
             xDelta = 0 -xDelta;
@@ -256,28 +266,30 @@ var NutUml;
         return obj;
     }
     NutUml = function (el) {
+        this.el = el;
         this.context = el.getContext("2d");
         this.tokens = [];
     };
     
 
-    NutUml.prototype.drawUml = function(){
-        var ctx= this.context;
+    NutUml.prototype.drawUml = function(text){
         var secObj = {
-            header : [
-                {name:"Tom", title:"Tom", width:0, height:0,x:0,y:0},
-                {name:"Bob", title:"Bob", width:0, height:0,x:0,y:0}
-            ],
-            lines : [
-                {from:"Tom", to: "Bob", message: "Hello"},
-                {from:"Bob", to: "Tom", message: "Hi"}
-            ],
-            innerHeight:0
+            header : [],
+            lines : [],
+            innerHeight:0,
+            width:0,
+            height:0
         };
+        var ana = this.analysis(text);
+        
+        if(ana instanceof Array){
+            this.tokens = ana;
+        }else{
+            return ana;
+        }
         secObj = _getObj(this.tokens);
-        debugger;
         console.log(secObj)
-
+        var ctx= this.context;
         ctx.lineWidth=1;
         ctx.translate(0.5,0.5);
 
@@ -285,8 +297,13 @@ var NutUml;
         _calcLineSize(ctx,secObj.lines);
         _calcHeaderXY(secObj);
         _calcLinesXY(secObj);
+
+        this.el.width = secObj.width;
+        this.el.height = secObj.height;
+
         _drawHeader(ctx,secObj);
         _drawLines(ctx,secObj);
+        return "";
     };
 
     NutUml.prototype.analysis = function(str) {
