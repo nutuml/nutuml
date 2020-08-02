@@ -12,86 +12,54 @@ var NutUml;
     var paddingHeight = 5;
     var pagePadding = 10;
     var lineHeight = fontSize + linePadding;
+    var shadowColor = "#9A6A7A";
+    var fillStyle = "#FEFECE";
+    var textFillStyle = "#333";
+    var strokeStyle = "#A80036";
+
+    const TYPE_RESERVED = 1;
+    const TYPE_WORD = 2;
+    const TYPE_MESSAGE = 3;
+    const TYPE_OPERATOR = 4;
+    const TYPE_SEPARATORS = 5;
 
     const reservedWords = ['if', 'int', 'for', 'while', 'do', 'return', 'break', 'continue'];
-    const operators = ['-','>','<','->', '-->'];
+    const operators = ['-','>','<','->', '-->','<-','<--'];
+    const fromOperators = ['->', '-->'];
+    const dashOperators = ['<--', '-->'];
+
     const separators = [':'];
     const newLines = ['\r','\n'];
 
-            
-    function _dashedLine(context,startX,startY,toX, toY, dashLength){
-        dashLength = dashLength === 0 || dashLength === undefined ?
-            dashLength = 5 : dashLength = dashLength;
-        
-        //线段数量
-        var dashNum = Math.ceil(Math.sqrt(Math.pow(startX-toX, 2)+Math.pow(startY-toY, 2))/ dashLength);
-        for(var i = 0; i <= dashNum; i++) {
-            var xTo = startX + i*(toX-startX)/dashNum;
-            var yTo = startY + i*(toY-startY)/dashNum;
-            if(xTo>toX){
-                xTo = toX;
-            }
-            if(yTo>toY){
-                yTo = toY;
-            }
-            if(i==dashNum){
-                context["lineTo"](xTo, yTo);
-            }else{
-                context[i%2 === 0 ? "moveTo" : "lineTo"](xTo, yTo);
-            }
-        }
-        context.stroke();
-    }
-        
-    /**
-    * 
-    * @param {Object} ctx    canvas对象
-    * @param {Object} fromX  起点x
-    * @param {Object} fromY  起点y
-    * @param {Object} toX    终点x
-    * @param {Object} toY    终点y
-    * @param {Object} theta  箭头夹角
-    * @param {Object} headlen 斜边长度
-    * @param {Object} width 箭头宽度
-    * @param {Object} color 颜色
-    */
-    function drawArrow(ctx, fromX, fromY, toX, toY,theta,headlen,width,color) { 
-        theta = typeof(theta) != 'undefined' ? theta : 30; 
-        headlen = typeof(theta) != 'undefined' ? headlen : 10; 
-        width = typeof(width) != 'undefined' ? width : 1;
-        color = typeof(color) != 'color' ? color : '#000'; 
-        // 计算各角度和对应的P2,P3坐标 
-        var angle = Math.atan2(fromY - toY, fromX - toX) * 180 / Math.PI, 
-            angle1 = (angle + theta) * Math.PI / 180, 
-            angle2 = (angle - theta) * Math.PI / 180, 
-            topX = headlen * Math.cos(angle1), 
-            topY = headlen * Math.sin(angle1), 
-            botX = headlen * Math.cos(angle2), 
-            botY = headlen * Math.sin(angle2); 
-        ctx.save(); 
-        ctx.beginPath(); 
-        var arrowX = fromX - topX, arrowY = fromY - topY;
-        ctx.moveTo(arrowX, arrowY); 
-        ctx.moveTo(fromX, fromY); 
-        ctx.lineTo(toX, toY); 
-        arrowX = toX + topX; 
-        arrowY = toY + topY; 
-        ctx.moveTo(arrowX, arrowY); 
-        ctx.lineTo(toX, toY); 
-        arrowX = toX + botX; 
-        arrowY = toY + botY; 
-        ctx.lineTo(arrowX, arrowY); 
-        ctx.strokeStyle = color; 
-        ctx.lineWidth = width; 
-        ctx.stroke(); 
-        ctx.restore(); 
-    }
     function _rectangle(ctx,item){
-        ctx.font= font;
+        ctx.save()
+        ctx.beginPath()
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=4;
+        ctx.shadowColor= shadowColor;
+
+        ctx.fillStyle= fillStyle;
+        ctx.fillRect(item.x, item.y, item.width, item.height);
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowBlur=1;
+
+        ctx.fillRect(item.x, item.y, item.width, item.height);
+
+        ctx.strokeStyle= strokeStyle;
         ctx.strokeRect(item.x, item.y, item.width, item.height);
-        ctx.fillText(item.title,item.x+paddingWidth,fontSize+item.y+paddingHeight);
         ctx.stroke();
         ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.font= font;
+        ctx.fillStyle = textFillStyle;
+        ctx.fillText(item.title,item.x+paddingWidth,fontSize+item.y+paddingHeight-1);
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
     }
     function _calcHeaderSize(context,header){
         context.font = font;
@@ -148,7 +116,13 @@ var NutUml;
             }
             var val = preItem.name + "_" + item.name;
             var val2 = item.name + "_" + preItem.name;
-            var span = Math.max(arr[val],arr[val2],minWidth);
+            var span = minWidth;
+            if(arr.includes(val)){
+                span = Math.max(span,arr[val])
+            }
+            if(arr.includes(val2)){
+                span = Math.max(span,arr[val2])
+            }
             item.x = preItem.x + span;
             
             item.y = pagePadding;
@@ -186,6 +160,25 @@ var NutUml;
         }
         return copy;
     }
+    function _dashedLine(ctx, x, y, toX, toY){
+        ctx.save()
+        ctx.beginPath()
+        ctx.setLineDash([5,5])
+        ctx.moveTo(x,y)
+        ctx.lineTo(toX,toY)
+        ctx.stroke()
+        ctx.fill()
+        ctx.restore()
+    }
+    function _realLine(ctx, x, y, toX, toY){
+        ctx.save()
+        ctx.beginPath()
+        ctx.moveTo(x,y)
+        ctx.lineTo(toX,toY)
+        ctx.stroke()
+        ctx.fill()
+        ctx.restore()
+    }
     function _drawHeader(ctx,obj){
         var len = obj.header.length;
         for(var i=0;i<len;i++){
@@ -205,13 +198,18 @@ var NutUml;
         }
     }
     function _line(ctx,item){
+        ctx.save()
+        ctx.beginPath()
         ctx.font= font;
         ctx.fillText(item.message,Math.min(item.x,item.toX) + 10,item.y-5);
-
-        ctx.moveTo(item.x,item.y);
-        ctx.lineTo(item.toX,item.toY);
-        ctx.stroke();
         ctx.fill();
+        ctx.restore()
+
+        if(dashOperators.includes(item.operator)){
+            _dashedLine(ctx,item.x, item.y, item.toX, item.toY);
+        }else{
+            _realLine(ctx,item.x, item.y, item.toX, item.toY);
+        }
         _drawArrow(ctx,item.toX,item.toY,item.x>item.toX);
     }
     function _drawArrow(ctx, x,y,reverse) { 
@@ -247,24 +245,41 @@ var NutUml;
         var headerArr = [];
         while(cur<len){
             var item = tokens[cur++];
-            if(item.type==2){
+            if(item.type==TYPE_WORD){
+                var lineItem = {
+                    from:"",
+                    to: "",
+                    message: "",
+                    operator: ""
+                }
+                
                 if(!headerArr.includes(item.value)){
                     obj.header.push({name:item.value,title:item.value});
                     headerArr.push(item.value);
                 }
-                cur++;
+                var opItem = tokens[cur++];
+                lineItem.operator = opItem.value;
+
                 var toItem = tokens[cur++];
                 if(!headerArr.includes(toItem.value)){
                     obj.header.push({name:toItem.value,title:toItem.value});
                     headerArr.push(toItem.value);
                 }
-                var sepItem = tokens[cur++];
-                if(sepItem.type==5){
-                    var messageItem = tokens[cur];
-                    obj.lines.push({from:item.value, to: toItem.value, message: messageItem.value})
+                if(fromOperators.includes(opItem.value)){
+                    lineItem.from = item.value;
+                    lineItem.to = toItem.value;
                 }else{
-                    obj.lines.push({from:item.value, to: toItem.value, message: ""})
+                    lineItem.from = toItem.value;
+                    lineItem.to = item.value;
                 }
+                var sepItem = tokens[cur++];
+                if(sepItem.type==TYPE_SEPARATORS){
+                    var messageItem = tokens[cur];
+                    if(messageItem.type == TYPE_MESSAGE){
+                        lineItem.message = messageItem.value
+                    }
+                }
+                obj.lines.push(lineItem);
             }
         }
         return obj;
@@ -307,9 +322,16 @@ var NutUml;
 
         _drawHeader(ctx,secObj);
         _drawLines(ctx,secObj);
+
         return "";
     };
-
+    function isWordChar(c){
+        var result = /[a-z0-9]/i.test(c);
+        if(result){
+            return result;
+        }
+        return c.charCodeAt(0)>255;
+    }
     NutUml.prototype.analysis = function(str) {
         /**
          * current用于标识当前字符位置,
@@ -320,34 +342,35 @@ var NutUml;
          * tokens存储词法分析的最终结果
          */
         let tokens = [];
+        
 
         while(cur < str.length) {
 
             if(/\s/.test(str[cur])) { // 跳过空格
                 cur++;
-            } else if(/[a-z0-9]/i.test(str[cur])) { // 读单词
+            } else if(isWordChar(str[cur])) { // 读单词
                 
                 let word = "" + str[cur++];
                 // 测试下一位字符,如果不是字母直接进入下一次循环(此时cur已经右移)
                 // 如果是则继续读字母,并将cur向右移动
-                while(cur < str.length && /[a-z0-9]/i.test(str[cur])) {
+                while(cur < str.length && isWordChar(str[cur])) {
                     // cur < str.length防止越界
                     word += str[cur++];
                 }
                 if(reservedWords.includes(word)) {
                     tokens.push({
-                        type: 1,
+                        type: TYPE_RESERVED,
                         value: word,
                     }); // 存储保留字(关键字)
                 } else {
                     tokens.push({
-                        type: 2,
+                        type: TYPE_WORD,
                         value: word,
                     }); // 存储普通单词                            
                 }
             } else if(separators.includes(str[cur])) {
                 tokens.push({
-                    type: 5,
+                    type: TYPE_SEPARATORS,
                     value: str[cur++],
                 }); // 存储分隔符并将cur向右移动
                 
@@ -358,7 +381,7 @@ var NutUml;
                     word += str[cur++];
                 }
                 tokens.push({
-                    type: 3,
+                    type: TYPE_MESSAGE,
                     value: word,
                 }); 
             } else if(operators.includes(str[cur])) {
@@ -367,7 +390,7 @@ var NutUml;
                     operator += str[cur++];
                 }
                 tokens.push({
-                    type: 4,
+                    type: TYPE_OPERATOR,
                     value: operator,
                 }); // 存储运算符                        
             } else {
