@@ -1,5 +1,7 @@
+'use strict'
+
 /**
- * NutUml version 0.2.0
+ * NutUml version 0.2.1
  */
 
 var NutUml;
@@ -232,7 +234,7 @@ var NutUml;
     function _calcParticipantSize(ctx,participant){
         ctx.font = font;
         var len = participant.length;
-        for (i = 0; i < len; i++) {
+        for (var i = 0; i < len; i++) {
             var item = participant[i];
             _oneParticipantSize(ctx,item);
         }
@@ -242,7 +244,7 @@ var NutUml;
         var len = lines.length;
         var pw = paddingWidth;
 
-        for (i = 0; i < len; i++) {
+        for (var i = 0; i < len; i++) {
             var item = lines[i];
             var obj = _measureText(ctx,item.message);
             item.width = obj.width + pw*2;

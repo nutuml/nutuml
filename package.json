@@ -1,6 +1,6 @@
 {
   "name": "nutuml",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "a tool to generate uml diagram",
   "main": "index.js",
   "scripts": {

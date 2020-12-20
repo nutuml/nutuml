@@ -1,1 +1,1 @@
-module.exports = require('./nutuml');
+module.exports = require('./nutuml').default;
