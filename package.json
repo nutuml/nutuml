@@ -1,0 +1,22 @@
+{
+  "name": "nutuml",
+  "version": "0.2.0",
+  "description": "a tool to generate uml diagram",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/junfengliang/nutuml.git"
+  },
+  "keywords": [
+    "nutuml"
+  ],
+  "author": "junfengliang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/junfengliang/nutuml/issues"
+  },
+  "homepage": "https://github.com/junfengliang/nutuml#readme"
+}
