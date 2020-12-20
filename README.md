@@ -1,8 +1,8 @@
 # NutUml
-A tool to generate UML diagram via text. Currently it's version 0.1.
+NutUml is A tool to generate UML diagram via text. For online preview you can visit [http://www.nutuml.com/](http://www.nutuml.com/)
 
 A generated UML secquence are as follow:
-![avatar](http://7niu.genlei.cn/nutuml.png)
+![avatar](http://7niu.genlei.cn/nutuml-demo-20201220.png)
 
 ## Get Start
 
