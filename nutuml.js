@@ -1,7 +1,7 @@
 'use strict'
 
 /**
- * NutUml version 0.2.1
+ * NutUml version 0.3.0
  */
 
 var NutUml;
@@ -19,6 +19,9 @@ var NutUml;
     var fillStyleWhite = "#ffffff";
     var textFillStyle = "#333";
     var strokeStyle = "#A80036";
+    const NOTE_FILL_STYLE="#F6FF70"
+    const NOTE_STROKE_STYLE="#BA0028"
+    
     var toSelfHeight = 13;
     const FILL_RED = "#ff0000";
     const GROUP_TEXT_SIZE = 12;
@@ -36,14 +39,17 @@ var NutUml;
     const TYPE_SEPARATORS = 5;
     const TYPE_STRING = 6;
     const TYPE_SEPARATE_LINE = 7;
+    const TYPE_COMMA = 8;
     const ALT_HEIGHT = 10;
     const END_HEIGHT = 10;
-    const ACTOR_WIDTH = 34;
 
     const TAB_LEFT_PADDING = 13;
     const TAB_RIGHT_PADDING = 15;
     const TAB_MIN_TEXT_WIDTH = 40;
     const TAB_HEIGHT = 14;
+
+    const REF_MIN_WIDTH = 100;
+    const REF_HEIGHT = 36;
 
     const LINE_SEQUENCE = 1;
     const LINE_SEPRATE = 2;
@@ -51,24 +57,35 @@ var NutUml;
     const LINE_ELSE =4;
     const LINE_GROUP = 5;
     const LINE_END = 6;
+    const LINE_ONLY_NOTE =7;
+    const LINE_REF =8;
+    const REF_PADDING = 20;
+
     const GROUP_LINE_LEFT_PADDING = 30;
     const GROUP_GROUP_LEFT_PADDING = 10;
     const GROUP_LINE_RIGHT_PADDING = 20;
     const GROUP_GROUP_RIGHT_PADDING = 20;
-    const NOTE_PADDING_TOP = 10;
+    const NOTE_PADDING_TOP = 15;
     const NOTE_PADDING_LEFT = 10;
-    const NOTE_PADDING_BOTTOM = 10;
+    const NOTE_PADDING_BOTTOM = 5;
     const NOTE_PADDING_RIGHT = 15;
     const NOTE_MARGIN = 10;
-
-
+//, 'collections'
+    const iParticipant = ['actor', 'boundary', 'control', 'entity', 'database'];
+    const iPar = {
+        actor: { width: 34, height: 54 },
+        boundary: { width: 42, height: 26 },
+        control: {width: 26, height: 32},
+        entity: {width: 24, height: 26},
+        database: {width: 38, height: 50}
+    };
     const reservedWords = ['hide','autonumber','as', 'participant', 'actor', 'boundary', 
         'control', 'entity', 'database', 'collections','title','header','footer',
         'alt','else','opt','loop','par','break','critical','group','end','note',
-        'left','right','of','over'];
+        'left','right','of','over','ref'];
     const participantWords = ['participant', 'actor', 'boundary', 'control', 'entity', 'database', 'collections'];
     const oneLineWords = ['title','header','footer','alt','else','opt','loop','par','break','critical','group'];
-    const multiLineWords = ['title','note'];
+    const multiLineWords = ['title','note','ref'];
     const groupWords = ['opt','loop','par','break','critical','group']
     const operators = ['-','>','<','->', '-->','<-','<--'];
     const fromOperators = ['->', '-->'];
@@ -81,6 +98,15 @@ var NutUml;
         var frameY = item.cornerY + GROUP_PADDING;
         var frameHeight = item.height - GROUP_PADDING;
 
+        // fill for ref
+        if(item.type == LINE_REF){
+            ctx.save()
+            ctx.beginPath()
+            ctx.fillStyle = "#fff"
+            ctx.fillRect(item.x, frameY, item.width, frameHeight);
+            ctx.fill()
+            ctx.restore()
+        }
         // draw left, top
         ctx.save()
         ctx.beginPath()
@@ -118,7 +144,7 @@ var NutUml;
         var tabMeasure = _measureText(ctx,typeName,GROUP_TEXT_SIZE);
         var tabWidth = Math.max(tabMeasure.width,TAB_MIN_TEXT_WIDTH);
         tabWidth = tabWidth + TAB_LEFT_PADDING + TAB_RIGHT_PADDING;
-        var tabHeight = item.height -5;
+        var tabHeight = tabMeasure.height;
         var fillX = item.x +1;
         var fillY = frameY+1;
         //fill 
@@ -144,12 +170,64 @@ var NutUml;
         ctx.stroke();
         ctx.beginPath();
         ctx.restore()
-        if(item.message!=""){
+        if((item.type ==LINE_ALT || item.type==LINE_GROUP) &&  item.message!=""){
             var msg =  "[" + item.message  + "]"
             _drawGroupText(ctx,item.x +tabWidth +paddingWidth,frameY-2,msg,true)
         }
+        if(item.type == LINE_REF){
+            ctx.font= font;
+            var txtObj = _measureText(ctx,item.message,fontSize);
+            var txtX = item.x + (item.width-txtObj.width)/2;
+            console.log("item.x=",item.x,",txtX=",txtX,"item.width=",item.width,"txtwidth=",txtObj.width)
+            var txtY = fillY + tabHeight + linePadding
+            _drawText(ctx,txtX,txtY,item.message,false);
+        }
         _drawGroupText(ctx,item.x +paddingWidth,frameY-2,typeName,true)
 
+    }
+    function _drawCollections(ctx,item){
+        var height = item.height - 4;
+        var width = item.width -4;
+        ctx.save()
+        ctx.beginPath()
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=4;
+        ctx.shadowColor= shadowColor;
+
+        ctx.fillStyle= fillStyle;
+
+        ctx.fillRect(item.x+4, item.y, width,  height);
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowBlur=1;
+
+        ctx.fillRect(item.x+4, item.y, width, height);
+
+        ctx.strokeStyle= strokeStyle;
+        ctx.strokeRect(item.x+4, item.y, width, height);
+        ctx.stroke();
+        ctx.fill();
+
+        ctx.beginPath()
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=4;
+        ctx.fillRect(item.x, item.y+4, width,  height);
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowBlur=1;
+
+        ctx.fillRect(item.x, item.y+4, width, height);
+
+        ctx.strokeStyle= strokeStyle;
+        ctx.strokeRect(item.x, item.y+4, width, height);
+        ctx.stroke();
+        ctx.fill();
+        ctx.restore();
+
+        _drawText(ctx,item.x+paddingWidth,item.y+4,item.title,true)
+        
     }
     function _rectangle(ctx,item){
         ctx.save()
@@ -177,27 +255,55 @@ var NutUml;
         
     }
     function _noteRectangle(ctx,item){
-        ctx.save()
-        ctx.beginPath()
-        ctx.shadowBlur=3;
-        ctx.shadowOffsetX=4;
-        ctx.shadowOffsetY=4;
-        ctx.shadowColor= shadowColor;
         var y = item.cornerY + NOTE_PADDING_TOP;
         var height = item.noteHeight - NOTE_PADDING_TOP - NOTE_PADDING_BOTTOM;
-        ctx.fillStyle= fillStyle;
-        ctx.fillRect(item.noteX, y, item.noteWidth, height);
-        ctx.shadowOffsetX=0;
-        ctx.shadowOffsetY=0;
-        ctx.shadowBlur=1;
 
-        ctx.fillRect(item.noteX, y, item.noteWidth, height);
+       var color = item.noteItem.color || NOTE_FILL_STYLE;
 
-        ctx.strokeStyle= strokeStyle;
-        ctx.strokeRect(item.noteX, y , item.noteWidth, height);
+        // draw left, top
+        ctx.save()
+        ctx.beginPath()
+        ctx.lineWidth=1;
+        ctx.fillStyle=  color;
+        ctx.strokeStyle=NOTE_STROKE_STYLE;
+
+        ctx.moveTo(item.noteX, y+height); // left bottom
+        ctx.lineTo(item.noteX, y); // left
+        ctx.lineTo(item.noteX+ item.noteWidth -10, y); //top
+        ctx.lineTo(item.noteX+ item.noteWidth,y+10); 
+        ctx.lineTo(item.noteX+ item.noteWidth,y+height); //right
+        ctx.closePath();
         ctx.stroke();
-        ctx.fill();
-        ctx.restore();
+        ctx.fill()
+        ctx.restore()
+
+        ctx.save()
+        ctx.beginPath()
+        ctx.lineWidth=1;
+        ctx.strokeStyle=NOTE_STROKE_STYLE;
+        ctx.moveTo(item.noteX+ item.noteWidth -10 , y); //top
+        ctx.lineTo(item.noteX+ item.noteWidth -10 ,y+10); 
+        ctx.lineTo(item.noteX+ item.noteWidth,y+10); //right
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore()
+
+        // draw right, bottom
+        ctx.save()
+        ctx.beginPath()
+        ctx.lineWidth=1;
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=2;
+        ctx.shadowOffsetY=2;
+        ctx.shadowColor= shadowColor;
+        ctx.strokeStyle=NOTE_STROKE_STYLE;
+
+        ctx.moveTo(item.noteX+item.noteWidth, y+10);
+        ctx.lineTo(item.noteX+item.noteWidth, y+height);
+        ctx.lineTo(item.noteX, y+height);
+        ctx.stroke();
+        ctx.restore()
+        ctx.beginPath()
 
         _drawText(ctx,item.noteX+NOTE_PADDING_LEFT,y,item.noteItem.message,false)
         
@@ -208,14 +314,17 @@ var NutUml;
         var obj = _measureText(ctx,item.title);
         item.width = obj.width + pw*2;
         item.height = obj.height;
-        if("actor"==item.type){
+        if("collections"==item.type){
+            item.width +=4;
+            item.height +=4;
+        }
+        if(iParticipant.includes(item.type)){
             item.width = obj.width;
-            item.height += 54;
-            if(item.width<ACTOR_WIDTH){
-                item.width = ACTOR_WIDTH;
+            item.height += iPar[item.type].height;
+            if(item.width<iPar[item.type].width){
+                item.width = iPar[item.type].width;
             }
         }
-        
     }
     function _calcObjSize(ctx,obj){
         if(obj.title.length>0){
@@ -250,6 +359,9 @@ var NutUml;
             item.width = obj.width + pw*2;
             if(item.type==LINE_ALT || item.type==LINE_GROUP){
                 item.height = obj.height + linePadding;
+            }else if(item.type == LINE_REF){
+                item.height = obj.height + linePadding + REF_HEIGHT;
+                item.width = Math.max(item.width,REF_MIN_WIDTH);
             }else if(item.type == LINE_END){
                 item.height = END_HEIGHT;
             }else{
@@ -258,11 +370,12 @@ var NutUml;
             if(item.from == item.to && item.type == LINE_SEQUENCE){
                 item.height += toSelfHeight;
             }
+            item.lineHeight = item.height;
             if(item.noteItem !=undefined){
                 var noteObj = _measureText(ctx,item.noteItem.message);
                 item.noteWidth = noteObj.width + NOTE_PADDING_LEFT + NOTE_PADDING_RIGHT;
                 item.noteHeight = noteObj.height + NOTE_PADDING_TOP + NOTE_PADDING_BOTTOM;
-                item.height = Math.max(item.height,item.noteHeight);
+                item.height = Math.max(item.lineHeight,item.noteHeight);
             }
         }
     }
@@ -281,10 +394,8 @@ var NutUml;
             if(arr[t]<minWidth){
                 arr[t]=minWidth;
             }
-            console.log(t + "=" + arr[t])
             obj.innerHeight += item.height
         }
-        console.log(arr);
         for(var i=0;i<len;i++){
             obj.maxParticipantHeight = Math.max(obj.participant[i].height,obj.maxParticipantHeight);
         }
@@ -332,6 +443,7 @@ var NutUml;
         for(var j=0;j<obj.lines.length;j++){
             var item = obj.lines[j];
             item.cornerY = curY;
+            item.lineY = item.cornerY + (item.height-item.lineHeight)/2;
             curY +=item.height;
             item.y = curY;
             item.toY = curY;
@@ -368,6 +480,17 @@ var NutUml;
                 }
             }else if(item.type == LINE_ELSE){
                 item.refItem = curGroupItem;
+            }else if(item.type == LINE_ONLY_NOTE){
+                item.noteX = _calcOnlyNote(item,obj);
+                minX = Math.min(minX,item.noteX);
+                maxX = Math.max(maxX,item.noteX+item.noteWidth+pagePadding);
+            }else if(item.type == LINE_REF){
+                item.x = _calcRefX(item,obj);
+                item.toX = item.x + item.width;
+                item.toY = item.cornerY + item.height;
+
+                minX = Math.min(minX,item.x);
+                maxX = Math.max(maxX,item.toX+pagePadding);
             }
             if(item.type !==LINE_SEQUENCE){
                 continue;
@@ -415,6 +538,46 @@ var NutUml;
             obj.width += obj.tranlateX
         }
     }
+    function _calcRefX(item,obj){
+        var fromParticipant, toParticipant;
+        for(var k=0;k<obj.participant.length;k++){
+            if(obj.participant[k].name == item.from){
+                fromParticipant = obj.participant[k];
+            }
+            if(obj.participant[k].name == item.to){
+                toParticipant = obj.participant[k];
+            }
+        }
+        if(toParticipant!==undefined){
+            var w = Math.abs(toParticipant.lineX - fromParticipant.lineX) + REF_PADDING ;
+            item.width = Math.max(item.width,w);
+            return (toParticipant.lineX + fromParticipant.lineX)/2 - item.width/2
+        }else{
+            return fromParticipant.lineX - 20;
+        }
+    }
+    function _calcOnlyNote(item,obj){
+        var fromParticipant, toParticipant;
+        for(var k=0;k<obj.participant.length;k++){
+            if(obj.participant[k].name == item.noteItem.participant){
+                fromParticipant = obj.participant[k];
+            }
+            if(obj.participant[k].name == item.noteItem.participantTo){
+                toParticipant = obj.participant[k];
+            }
+        }
+        if(toParticipant!==undefined){
+            return (toParticipant.lineX + fromParticipant.lineX)/2 - item.noteWidth/2
+        }else{
+            if("left"==item.noteItem.direction){
+                return fromParticipant.lineX - item.noteWidth - NOTE_MARGIN;
+            }else if("right"==item.noteItem.direction){
+                return fromParticipant.lineX + NOTE_MARGIN;
+            }else{
+                return fromParticipant.lineX - item.noteWidth/2;
+            }
+        }
+    }
     function _copyObj(obj){
         var copy = {};
         for (var attr in obj) {
@@ -444,6 +607,16 @@ var NutUml;
     function _drawOneParticipant(ctx,item){
         if(item.type=="actor"){
             _drawActor(ctx,item);
+        }else if(item.type=="boundary"){
+            _drawBoundary(ctx,item);
+        }else if(item.type=="control"){
+            _drawControl(ctx,item);
+        }else if(item.type=="entity"){
+            _drawEntity(ctx,item);
+        }else if(item.type=="database"){
+            _drawDatabase(ctx,item);
+        }else if(item.type=="collections"){
+            _drawCollections(ctx,item);
         }else{
             _rectangle(ctx,item);
         }
@@ -461,7 +634,6 @@ var NutUml;
 
             var headerX = obj.width - pagePadding - hObj.width;
             _drawText(ctx,headerX, pagePadding,obj.header,false);
-            debugger;
         }
         if(obj.footerHeight>0){
             ctx.font = font;
@@ -477,11 +649,16 @@ var NutUml;
             _drawOneParticipant(ctx,item);
             var bottom = _copyObj(item);
             bottom.y = item.y + obj.innerHeight + lineHeight + item.height;
+            bottom.isBottom = true;
             if(!obj.hideFootbox){
                 _drawOneParticipant(ctx,bottom);
             }
             _dashedLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y);
         }
+    }
+    function _drawRef(ctx,item){
+        
+        _groupRectangle(ctx,item)
     }
     function _drawLines(ctx,obj){
         var len = obj.lines.length;
@@ -493,6 +670,10 @@ var NutUml;
                 _separateLine(ctx,item,obj)
             }else if(item.type == LINE_ELSE){
                 _elseLine(ctx,item,obj)
+            }else if(item.type == LINE_ONLY_NOTE){
+                _noteRectangle(ctx,item)
+            }else if(item.type == LINE_REF){
+                _drawRef(ctx,item)
             }
         }
     }
@@ -571,7 +752,7 @@ var NutUml;
         _dashedLine(ctx,item.refItem.x, lineY, item.refItem.toX, lineY);
     }
     function _line(ctx,item,obj){
-     /*   
+      /*
         ctx.save(); 
         ctx.fillStyle = FILL_RED;
         ctx.fillRect(Math.min(item.x,item.toX), item.cornerY, item.width, item.height);
@@ -586,18 +767,18 @@ var NutUml;
         }
         var textObj = _measureText(ctx,item.message);
         if(item.from==item.to){
-            _drawText(ctx,Math.min(item.x,item.toX) + 10,item.cornerY+paddingHeight, message);
-            _drawToSelf(ctx,item.x,item.y-toSelfHeight)
+            _drawText(ctx,Math.min(item.x,item.toX) + 10,item.lineY+paddingHeight, message);
+            _drawToSelf(ctx,item.x,item.lineY+item.lineHeight-toSelfHeight)
             return;
         }else{
-            _drawText(ctx,Math.min(item.x,item.toX) + 10,item.y-textObj.height, message);
+            _drawText(ctx,Math.min(item.x,item.toX) + 10,item.lineY+paddingHeight, message);
         }
         if(dashOperators.includes(item.operator)){
-            _dashedLine(ctx,item.x, item.y, item.toX, item.toY);
+            _dashedLine(ctx,item.x, item.lineY+item.lineHeight, item.toX, item.lineY+item.lineHeight);
         }else{
-            _realLine(ctx,item.x, item.y, item.toX, item.toY);
+            _realLine(ctx,item.x, item.lineY+item.lineHeight, item.toX, item.lineY+item.lineHeight);
         }
-        _drawArrow(ctx,item.toX,item.toY,item.x>item.toX);
+        _drawArrow(ctx,item.toX,item.lineY+item.lineHeight,item.x>item.toX);
     }
     function _drawArrow(ctx, x,y,reverse) { 
         var xDelta =-12;
@@ -621,14 +802,272 @@ var NutUml;
         ctx.fill();
         ctx.restore(); 
     }
-    function _drawActor(ctx,item){
+    function _drawDatabase(ctx,item){
         var x = item.x;
         var y = item.y;
-        if(item.width>ACTOR_WIDTH){
-            x = item.x + (item.width-ACTOR_WIDTH)/2;
+        if(item.isBottom){
+            y+=fontSize+paddingHeight;
+        }
+        var picWidth = iPar["database"].width;
+        var picHeight = iPar["database"].height;
+        if(item.width>picWidth){
+            x = item.x + (item.width-picWidth)/2;
+        }
+        ctx.save()
+        ctx.lineWidth=2
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowColor= shadowColor;
+
+        ctx.beginPath();
+        ctx.fillRect(item.x, y+11, 38, 28);
+        ctx.fill()
+
+        ctx.lineWidth=2
+        ctx.ellipse(x+19,y+11,19,11,0,0,Math.PI*2);
+        
+        ctx.ellipse(x+19,y+39,19,11,0,0,Math.PI);
+        ctx.moveTo(x,y+11)
+        ctx.lineTo(x,y+39)
+        ctx.moveTo(x+38,y+11)
+        ctx.lineTo(x+38,y+39)
+        ctx.fill()
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=2;
+        ctx.shadowOffsetY=3;
+        ctx.shadowColor= shadowColor;
+        
+        ctx.moveTo(x+38,y+11)
+        ctx.lineTo(x+38,y+39)
+        ctx.ellipse(x+19,y+39,19,11,0,0,Math.PI);
+        ctx.stroke()
+        ctx.restore()
+
+        ctx.save()
+        ctx.beginPath();
+        ctx.font= font;
+        ctx.fillStyle = textFillStyle;
+        x=item.x;
+        var textWidth = ctx.measureText(item.title).width;
+        if(textWidth<picWidth){
+            x+= (picWidth-textWidth)/2;
+        }
+        ctx.fontSize = fontSize;
+        if(item.isBottom){
+            ctx.fillText(item.title,x,y-paddingHeight);
+        }else{
+            ctx.fillText(item.title,x,fontSize+picHeight+item.y);
+        }
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+    }
+    function _drawEntity(ctx,item){
+        var x = item.x;
+        var y = item.y;
+        if(item.isBottom){
+            y+=fontSize+paddingHeight;
+        }
+        var picWidth = iPar["entity"].width;
+        var picHeight = iPar["entity"].height;
+        if(item.width>picWidth){
+            x = item.x + (item.width-picWidth)/2;
+        }
+        ctx.save()
+        ctx.lineWidth=2
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=4;
+        ctx.shadowColor= shadowColor;
+
+        ctx.beginPath();
+        ctx.lineWidth=2
+
+        ctx.arc(x+12,y+12,12,0,2*Math.PI);
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.arc(x+12,y+12,11,0,2*Math.PI);
+        ctx.fill();
+
+        ctx.beginPath()
+        ctx.fillStyle = strokeStyle;
+        ctx.moveTo(x,y+25);
+        ctx.lineTo(x+25,y+25);
+        ctx.stroke()
+        ctx.restore()
+
+        ctx.save()
+        ctx.beginPath();
+        ctx.font= font;
+        ctx.fillStyle = textFillStyle;
+        x=item.x;
+        var textWidth = ctx.measureText(item.title).width;
+        if(textWidth<picWidth){
+            x+= (picWidth-textWidth)/2;
+        }
+        ctx.fontSize = fontSize;
+        if(item.isBottom){
+            ctx.fillText(item.title,x,y-paddingHeight);
+        }else{
+            ctx.fillText(item.title,x,fontSize+picHeight+item.y);
+        }
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+    }
+
+    function _drawControl(ctx,item){
+        var x = item.x;
+        var y = item.y;
+        if(item.isBottom){
+            y+=fontSize+paddingHeight;
+        }
+        var picWidth = iPar["control"].width;
+        var picHeight = iPar["control"].height;
+        if(item.width>picWidth){
+            x = item.x + (item.width-picWidth)/2;
+        }
+        ctx.save()
+        ctx.lineWidth=2
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=4;
+        ctx.shadowColor= shadowColor;
+
+        ctx.beginPath();
+        ctx.lineWidth=2
+
+        ctx.arc(x+13,y+19,13,0,2*Math.PI);
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.arc(x+13,y+19,12,0,2*Math.PI);
+        ctx.fill();
+
+        ctx.beginPath()
+        ctx.fillStyle = strokeStyle;
+        ctx.moveTo(x+10,y+6);
+        ctx.lineTo(x+17,y+12);
+        ctx.lineTo(x+15,y+6);
+        ctx.lineTo(x+17,y);
+        ctx.closePath()
+        ctx.fill()
+        ctx.restore()
+
+        ctx.save()
+        ctx.beginPath();
+        ctx.font= font;
+        ctx.fillStyle = textFillStyle;
+        x=item.x;
+        var textWidth = ctx.measureText(item.title).width;
+        if(textWidth<picWidth){
+            x+= (picWidth-textWidth)/2;
+        }
+        ctx.fontSize = fontSize;
+        if(item.isBottom){
+            ctx.fillText(item.title,x,y-paddingHeight);
+        }else{
+            ctx.fillText(item.title,x,fontSize+picHeight+item.y);
+        }
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+    }
+    
+    function _drawBoundary(ctx,item){
+        var x = item.x+1;
+        var y = item.y;
+        if(item.isBottom){
+            y+=fontSize+paddingHeight;
+        }
+        var picWidth = iPar["boundary"].width;
+        var picHeight = iPar["boundary"].height;
+        if(item.width>picWidth){
+            x = item.x + (item.width-picWidth)/2;
         }
         ctx.save()
         ctx.beginPath();
+        ctx.lineWidth=2
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=4;
+        ctx.shadowColor= shadowColor;
+
+        ctx.moveTo(x,y);
+        ctx.lineTo(x,y+24);
+        ctx.moveTo(x,y+12);
+        ctx.lineTo(x+17,y+12);
+        ctx.stroke()
+
+        ctx.beginPath();
+        ctx.lineWidth=2
+
+        ctx.arc(x+29,y+12,12,0,2*Math.PI);
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.shadowBlur=0;
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.arc(x+29,y+12,11,0,2*Math.PI);
+        ctx.fill();
+
+        ctx.restore()
+
+        ctx.save()
+        ctx.beginPath();
+        ctx.font= font;
+        ctx.fillStyle = textFillStyle;
+        x=item.x;
+        var textWidth = ctx.measureText(item.title).width;
+        if(textWidth<picWidth){
+            x+= (picWidth-textWidth)/2;
+        }
+        ctx.fontSize = fontSize;
+        if(item.isBottom){
+            ctx.fillText(item.title,x,y-paddingHeight);
+        }else{
+            ctx.fillText(item.title,x,fontSize+picHeight+item.y);
+        }
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+    }
+    function _drawActor(ctx,item){
+        var x = item.x+2;
+        var y = item.y;
+        if(item.isBottom){
+            y+=fontSize+paddingHeight;
+        }
+        var picWidth = iPar["actor"].width;
+        var picHeight = iPar["actor"].height;
+
+        if(item.width>picWidth){
+            x = item.x + (item.width-picWidth)/2;
+        }
+        ctx.save()
+        ctx.beginPath();
+        ctx.lineWidth=2
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+
         ctx.arc(x+15,y+8,8,0,2*Math.PI);
         ctx.fill();
         ctx.moveTo(x+15,y+16);
@@ -647,10 +1086,14 @@ var NutUml;
         ctx.fillStyle = textFillStyle;
         x=item.x;
         var textWidth = ctx.measureText(item.title).width;
-        if(textWidth<ACTOR_WIDTH){
-            x+= (ACTOR_WIDTH-textWidth)/2;
+        if(textWidth<picWidth){
+            x+= (picWidth-textWidth)/2;
         }
-        ctx.fillText(item.title,x,fontSize+54+item.y+paddingHeight-1);
+        if(item.isBottom){
+            ctx.fillText(item.title,x,y-paddingHeight);
+        }else{
+            ctx.fillText(item.title,x,fontSize+picHeight+item.y);
+        }
         ctx.fill()
         ctx.stroke()
         ctx.restore()
@@ -716,6 +1159,91 @@ var NutUml;
             typeName: typeName
         }
     }
+    function _parseRef(tokens,obj,cur){
+        var len = tokens.length;
+
+        /* handle below case:
+                ref over Alice, Bob : init
+            */
+        if(cur+5<len){
+            var refFrom = tokens[cur+1];
+            var refTo = tokens[cur+3];
+
+            var refMessage = tokens[cur+5];
+
+            if("over"==tokens[cur].value && refFrom.type==TYPE_WORD
+                && tokens[cur+2].type == TYPE_COMMA && refTo.type==TYPE_WORD
+                && tokens[cur+4].value == ":" && refMessage.type ==TYPE_MESSAGE
+            ){
+                    var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                    lineObj.from = refFrom.value;
+                    lineObj.to = refTo.value;
+                    obj.lines.push(lineObj)
+                return cur+6
+            }
+        }
+        /* handle below case:
+            ref over Alice : init
+            */
+        if(cur+3<len){
+            var refFrom = tokens[cur+1];
+            var refMessage = tokens[cur+3];
+
+            if("over"==tokens[cur].value && refFrom.type==TYPE_WORD
+            && tokens[cur+2].value == ":" && refMessage.type ==TYPE_MESSAGE
+            ){
+                var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                lineObj.from = refFrom.value;
+                obj.lines.push(lineObj)
+                return cur+4
+            }
+        }
+            /* handle below case:
+            ref over Bob
+            This can be on
+            several lines
+            end ref
+            */
+        if(cur+4<len){
+            var refFrom = tokens[cur+1];
+
+            var refMessage = tokens[cur+2];
+
+            if("over"==tokens[cur].value && refFrom.type==TYPE_WORD
+             && refMessage.type ==TYPE_MESSAGE && tokens[cur+3].value=="end"
+             && tokens[cur+4].value=="ref"
+            ){
+                var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                lineObj.from = refFrom.value;
+                obj.lines.push(lineObj)
+                return cur+5
+            }
+        }
+        /* handle below case:
+            ref over Alice, Bob
+            This can be on
+            several lines
+            end ref
+            */
+           if(cur+6<len){
+            var refFrom = tokens[cur+1];
+            var refTo = tokens[cur+3];
+
+            var refMessage = tokens[cur+4];
+
+            if("over"==tokens[cur].value && refFrom.type==TYPE_WORD
+             && tokens[cur+2].type==TYPE_COMMA && refFrom.type==TYPE_WORD
+             && refMessage.type ==TYPE_MESSAGE && tokens[cur+5].value=="end"
+             && tokens[cur+6].value=="ref"
+            ){
+                var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                lineObj.from = refFrom.value;
+                lineObj.to = refTo.value;
+                obj.lines.push(lineObj)
+                return cur+7
+            }
+        }
+    }
     function _getObj(tokens){
         var obj = {
             participant : [],
@@ -739,6 +1267,10 @@ var NutUml;
         while(cur<len){
             var item = tokens[cur++];
             if(item.type==TYPE_RESERVED){
+                if("ref"==item.value){
+                    cur = _parseRef(tokens,obj,cur)
+                    continue;
+                }
                 if("note"==item.value){
                     // handle two case
                     //note left: this is a first note
@@ -782,6 +1314,143 @@ var NutUml;
                             if(obj.lines.length>0){
                                 obj.lines[obj.lines.length-1].noteItem = noteItem;
                             }
+                            continue;
+                         }
+                    }
+                    /** handle blow case
+                        note left of Alice #aqua
+                        This is displayed
+                        left of Alice.
+                        end note
+                     */
+                    if(cur+6<len){
+                        var noteDir = tokens[cur];
+                        var noteOf = tokens[cur+1];
+                        var noteWord = tokens[cur+2];
+                        var noteColor = tokens[cur+3];
+                        var noteMessage = tokens[cur+4];
+                        if( ("left" == noteDir.value || "right"==noteDir.value)
+                         && "of" == noteOf.value && noteWord.type == TYPE_WORD
+                         && noteMessage.type == TYPE_MESSAGE 
+                         && tokens[cur+5].value=='end' && tokens[cur+6].value=='note'){
+                            var noteItem = {
+                                "direction": noteDir.value,
+                                "message": noteMessage.value,
+                                "color": noteColor.value,
+                                "participant": noteWord.value
+                            }
+                            cur = cur+7;
+                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            lineObj.noteItem = noteItem;
+                            obj.lines.push(lineObj)
+                            continue;
+                         }
+                    }
+                    /** handle blow case
+                        note right of Alice: This is displayed right of Alice.
+                     */
+                    if(cur+4<len){
+                        var noteDir = tokens[cur];
+                        var noteOf = tokens[cur+1];
+                        var noteWord = tokens[cur+2];
+                        var noteSeprator = tokens[cur+3];
+                        var noteMessage = tokens[cur+4];
+                        if( ("left" == noteDir.value || "right"==noteDir.value)
+                         && "of" == noteOf.value && noteWord.type == TYPE_WORD
+                         && noteSeprator.type == TYPE_SEPARATORS
+                         && noteMessage.type == TYPE_MESSAGE ){
+                            var noteItem = {
+                                "direction": noteDir.value,
+                                "message": noteMessage.value,
+                                "participant": noteWord.value
+                            }
+                            cur = cur+5;
+                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            lineObj.noteItem = noteItem;
+                            obj.lines.push(lineObj)
+                            continue;
+                         }
+                    }
+                     /** handle blow case
+                        note over Alice: This is displayed over Alice.
+                     */
+                    if(cur+3<len){
+                        var noteOver = tokens[cur];
+                        var noteWord = tokens[cur+1];
+                        var noteSeprator = tokens[cur+2];
+                        var noteMessage = tokens[cur+3];
+                        if( "over" == noteOver.value && noteWord.type == TYPE_WORD
+                         && noteSeprator.type == TYPE_SEPARATORS
+                         && noteMessage.type == TYPE_MESSAGE ){
+                            var noteItem = {
+                                "direction": noteOver.value,
+                                "message": noteMessage.value,
+                                "participant": noteWord.value
+                            }
+                            cur = cur+4;
+                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            lineObj.noteItem = noteItem;
+                            obj.lines.push(lineObj)
+                            continue;
+                         }
+                    }
+                    /** handle blow case
+                        note over Alice, Bob #FFAAAA: This is displayed\n over Bob and Alice.
+                     */
+                    if(cur+6<len){
+                        var noteOver = tokens[cur];
+                        var noteWord = tokens[cur+1];
+                        var noteComma = tokens[cur+2];
+                        var noteWordTo = tokens[cur+3];
+                        var noteColor = tokens[cur+4];
+                        var noteSeprator = tokens[cur+5]
+                        var noteMessage = tokens[cur+6];
+                        if( "over" == noteOver.value && noteWord.type == TYPE_WORD
+                         && noteComma.type == TYPE_COMMA && noteWordTo.type == TYPE_WORD
+                         && noteSeprator.type == TYPE_SEPARATORS
+                         && noteMessage.type == TYPE_MESSAGE ){
+                            var noteItem = {
+                                "direction": noteOver.value,
+                                "message": noteMessage.value,
+                                "participant": noteWord.value,
+                                "color":noteColor.value,
+                                "participantTo": noteWordTo.value
+                            }
+                            cur = cur+7;
+                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            lineObj.noteItem = noteItem;
+                            obj.lines.push(lineObj)
+                            continue;
+                         }
+                    }
+
+                    /** handle blow case
+                        note over Bob, Alice
+                        This is yet another
+                        example of
+                        a long note.
+                        end note                     
+                    */
+                    if(cur+6<len){
+                        var noteOver = tokens[cur];
+                        var noteWord = tokens[cur+1];
+                        var noteComma = tokens[cur+2];
+                        var noteWordTo = tokens[cur+3];
+                        var noteMessage = tokens[cur+4];
+                        if( "over" == noteOver.value && noteWord.type == TYPE_WORD
+                         && noteComma.type == TYPE_COMMA && noteWordTo.type == TYPE_WORD
+                         && noteMessage.type == TYPE_MESSAGE 
+                         && tokens[cur+5].value == "end" && tokens[cur+6].value== "note"){
+                            var noteItem = {
+                                "direction": noteOver.value,
+                                "message": noteMessage.value,
+                                "participant": noteWord.value,
+                                "participantTo": noteWordTo.value
+                            }
+                            cur = cur+7;
+                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            lineObj.noteItem = noteItem;
+                            obj.lines.push(lineObj)
                             continue;
                          }
                     }
@@ -958,19 +1627,23 @@ var NutUml;
         this.img = img;
         this.canvas = canvas;
         this.tokens = [];
+        this.debug = false;
     };
-    
 
     NutUml.prototype.drawUml = function(text){
         var ana = this.analysis(text);
-        console.log(ana)
+        if(this.debug){
+            console.log(ana)
+        }
         if(ana instanceof Array){
             this.tokens = ana;
         }else{
             return ana;
         }
         var secObj = _getObj(this.tokens);
-        console.log(secObj)
+        if(this.debug){
+            console.log(secObj)
+        }
         var ctx= this.context;
         ctx.lineWidth=1;
         
@@ -999,6 +1672,9 @@ var NutUml;
         var result = /[a-z0-9]/i.test(c);
         if(result){
             return result;
+        }
+        if(c=='#'){
+            return true;
         }
         return c.charCodeAt(0)>255;
     }
@@ -1038,7 +1714,7 @@ var NutUml;
                                 multiLine = false;
                                 tokens.push({
                                     type: TYPE_MESSAGE,
-                                    value: message,
+                                    value: message.trimEnd(),
                                 });
                                 tokens.push({
                                     type: TYPE_RESERVED,
@@ -1078,7 +1754,9 @@ var NutUml;
                         value: word,
                     }); // 存储保留字(关键字)
                     if(multiLineWords.includes(word)){
-                        multiLineFlag = true;
+                        if(tokens[tokens.length-2].value!="end"){
+                            multiLineFlag = true;
+                        }
                     }
                     if(oneLineWords.includes(word)){
                         while(cur<str.length && /\s/.test(str[cur]) && !newLines.includes(str[cur])){
@@ -1122,6 +1800,11 @@ var NutUml;
                     type: TYPE_MESSAGE,
                     value: word,
                 }); 
+            } else if(','==str[cur]) {
+                tokens.push({
+                    type: TYPE_COMMA,
+                    value: str[cur++],
+                }); // 存储分隔符并将cur向右移动
             } else if(operators.includes(str[cur])) {
                 let operator = "" + str[cur++];
                 while(cur < str.length && operators.includes(str[cur])) {
@@ -1174,5 +1857,6 @@ var NutUml;
     };
 
 })()
-
-export default NutUml;
+if (typeof module !== 'undefined' && typeof exports === 'object') {
+    module.exports = NutUml;
+}
