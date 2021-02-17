@@ -1,7 +1,7 @@
 'use strict'
 
 /**
- * NutUml version 0.3.0
+ * NutUml version 0.4.0
  */
 
 var NutUml;
@@ -40,6 +40,9 @@ var NutUml;
     const TYPE_STRING = 6;
     const TYPE_SEPARATE_LINE = 7;
     const TYPE_COMMA = 8;
+    const TYPE_DELAY = 9;
+    const TYPE_SPACE =10;
+
     const ALT_HEIGHT = 10;
     const END_HEIGHT = 10;
 
@@ -59,6 +62,8 @@ var NutUml;
     const LINE_END = 6;
     const LINE_ONLY_NOTE =7;
     const LINE_REF =8;
+    const LINE_DELAY =9;
+    const LINE_SPACE =10;
     const REF_PADDING = 20;
 
     const GROUP_LINE_LEFT_PADDING = 30;
@@ -70,7 +75,10 @@ var NutUml;
     const NOTE_PADDING_BOTTOM = 5;
     const NOTE_PADDING_RIGHT = 15;
     const NOTE_MARGIN = 10;
-//, 'collections'
+
+    const ACTIVE_WIDTH = 10;
+
+    //, 'collections'
     const iParticipant = ['actor', 'boundary', 'control', 'entity', 'database'];
     const iPar = {
         actor: { width: 34, height: 54 },
@@ -82,10 +90,11 @@ var NutUml;
     const reservedWords = ['hide','autonumber','as', 'participant', 'actor', 'boundary', 
         'control', 'entity', 'database', 'collections','title','header','footer',
         'alt','else','opt','loop','par','break','critical','group','end','note',
-        'left','right','of','over','ref'];
+        'left','right','of','over','ref','activate','deactivate','destroy'];
     const participantWords = ['participant', 'actor', 'boundary', 'control', 'entity', 'database', 'collections'];
     const oneLineWords = ['title','header','footer','alt','else','opt','loop','par','break','critical','group'];
     const multiLineWords = ['title','note','ref'];
+    const activeWords = ['activate','deactivate','destroy'];
     const groupWords = ['opt','loop','par','break','critical','group']
     const operators = ['-','>','<','->', '-->','<-','<--'];
     const fromOperators = ['->', '-->'];
@@ -229,6 +238,33 @@ var NutUml;
         _drawText(ctx,item.x+paddingWidth,item.y+4,item.title,true)
         
     }
+    function _activeRectangle(ctx,item){
+        ctx.save()
+        ctx.beginPath()
+        ctx.shadowBlur=3;
+        ctx.shadowOffsetX=4;
+        ctx.shadowOffsetY=4;
+        ctx.shadowColor= shadowColor;
+
+        var x = item.x-ACTIVE_WIDTH/2;
+        var y =  item.topY;
+        var w = ACTIVE_WIDTH;
+        var h = item.bottomY - item.topY;
+
+        ctx.fillStyle= "#ffffff";
+        ctx.fillRect(x,y,w,h);
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowBlur=1;
+
+        ctx.fillRect(x,y,w,h);
+
+        ctx.strokeStyle= strokeStyle;
+        ctx.strokeRect(x,y,w,h);
+        ctx.stroke();
+        ctx.fill();
+        ctx.restore();
+    }
     function _rectangle(ctx,item){
         ctx.save()
         ctx.beginPath()
@@ -364,6 +400,19 @@ var NutUml;
                 item.width = Math.max(item.width,REF_MIN_WIDTH);
             }else if(item.type == LINE_END){
                 item.height = END_HEIGHT;
+            }else if(item.type == LINE_SPACE){
+                var h = parseInt(item.message);
+                if(h>0){
+                    item.height=h;
+                }else{
+                    item.height = obj.height;
+                }
+            }else if(item.type == LINE_DELAY){
+                if(""==item.message.trim()){
+                    item.height = 25;
+                }else{
+                    item.height = 40;
+                }
             }else{
                 item.height = obj.height + linePadding;
             }
@@ -548,6 +597,9 @@ var NutUml;
                 toParticipant = obj.participant[k];
             }
         }
+        if(fromParticipant==undefined){
+            return 0;
+        }
         if(toParticipant!==undefined){
             var w = Math.abs(toParticipant.lineX - fromParticipant.lineX) + REF_PADDING ;
             item.width = Math.max(item.width,w);
@@ -584,6 +636,29 @@ var NutUml;
             if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
         }
         return copy;
+    }
+    function _delayLine(ctx,x,y,toX,toY,arr){
+        var yPadding =10;
+        _realLine(ctx,x,y,toX,arr[0].from + yPadding)
+        
+        for(var i=0;i<arr.length;i++){
+            if(i>=1){
+                _realLine(ctx,x,arr[i-1].to + yPadding,toX,arr[i].from + yPadding);
+            }
+            _dotedLine(ctx,x,arr[i].from + yPadding ,toX,arr[i].to + yPadding);
+
+        }
+        _realLine(ctx,x,arr[arr.length-1].to + yPadding,toX,toY)
+    }
+    function _dotedLine(ctx, x, y, toX, toY){
+        ctx.save()
+        ctx.beginPath()
+        ctx.setLineDash([1,4])
+        ctx.moveTo(x,y)
+        ctx.lineTo(toX,toY)
+        ctx.stroke()
+        ctx.fill()
+        ctx.restore()
     }
     function _dashedLine(ctx, x, y, toX, toY){
         ctx.save()
@@ -644,6 +719,8 @@ var NutUml;
     }
     function _drawParticipant(ctx,obj){
         var len = obj.participant.length;
+        var delayArr = _patchDelay(obj);
+        
         for(var i=0;i<len;i++){
             var item = obj.participant[i];
             _drawOneParticipant(ctx,item);
@@ -653,12 +730,32 @@ var NutUml;
             if(!obj.hideFootbox){
                 _drawOneParticipant(ctx,bottom);
             }
-            _dashedLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y);
+            if(delayArr.length>0){
+                _delayLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y,delayArr);
+            }else{
+                _dashedLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y);
+            }
         }
+    }
+    function _patchDelay(obj){
+        var len = obj.lines.length;
+        var arr = []
+        for(var i=0;i<len;i++){
+            var line = obj.lines[i];
+            if(line.type==LINE_DELAY){
+                arr.push({from:line.cornerY, to: line.cornerY+line.height})
+            }
+        }
+        return arr;
     }
     function _drawRef(ctx,item){
         
         _groupRectangle(ctx,item)
+    }
+    function _drawActive(ctx,obj){
+        for(var i=0;i<obj.activeLines.length;i++){
+            _activeRectangle(ctx,obj.activeLines[i]);
+        }
     }
     function _drawLines(ctx,obj){
         var len = obj.lines.length;
@@ -674,8 +771,18 @@ var NutUml;
                 _noteRectangle(ctx,item)
             }else if(item.type == LINE_REF){
                 _drawRef(ctx,item)
+            }else if(item.type == LINE_DELAY){
+                _drawDelay(ctx,item,obj.width)
             }
         }
+    }
+    function _drawDelay(ctx,item,objWidth){
+        if(item.message.trim()==""){
+            return;
+        }
+        var mObj = _measureText(ctx,item.message,fontSize);
+        var x = (objWidth - mObj.width)/2 - NOTE_PADDING_LEFT;
+        _drawText(ctx,x,item.lineY+20, item.message);
     }
     function _drawGroupAlt(ctx,obj){
         var len = obj.lines.length;
@@ -1156,7 +1263,8 @@ var NutUml;
             operator: "",
             number:0,
             type: lineType,
-            typeName: typeName
+            typeName: typeName,
+            active:[]
         }
     }
     function _parseRef(tokens,obj,cur){
@@ -1244,10 +1352,48 @@ var NutUml;
             }
         }
     }
+    function isActive(val){
+        return activeWords.includes(val);
+    }
+    function isColor(val){
+        if(val===undefined){
+            return false
+        }
+        return val[0]==='#';
+    }
+    function handleActive(obj,token,cur,val){
+
+        var item = token[cur++];
+        var colorWord = token[cur];
+        if(colorWord!== undefined &&  isColor(colorWord.value)){
+            if(obj.lines.length>0){
+                obj.lines[obj.lines.length-1].active.push({
+                    "type":val,
+                    "participant":item.value,
+                    "color":colorWord.value
+                })
+            }
+            return cur+1;
+        }
+        if(item.type==TYPE_WORD){
+            if(obj.lines.length>0){
+                obj.lines[obj.lines.length-1].active.push({
+                    "type":val,
+                    "participant":item.value
+                })
+            }else{
+                //todo syntax error
+            }
+        }else{
+            // todo syntax error
+        }
+        return cur;
+    }
     function _getObj(tokens){
         var obj = {
             participant : [],
             lines : [],
+            activeLines : [],
             innerHeight:0,
             width:0,
             height:0,
@@ -1465,6 +1611,10 @@ var NutUml;
                         obj.title = opItem.value;
                     }
                 }
+                if(isActive(item.value)){
+                    cur = handleActive(obj,tokens,cur,item.value)
+                    continue;
+                }
                 if("header"==item.value){
                     var opItem = tokens[cur++];
                     if(opItem.type == TYPE_MESSAGE){
@@ -1537,15 +1687,16 @@ var NutUml;
                     }
                 }
             }
+            if(item.type==TYPE_DELAY){
+                obj.lines.push(_getLineItem(LINE_DELAY,item.value,"DELAY"));
+                continue
+            }else if(item.type==TYPE_SPACE){
+                obj.lines.push(_getLineItem(LINE_SPACE,item.value,"SPACE"));
+                continue
+            }
             if(item.type==TYPE_WORD || item.type==TYPE_STRING|| item.type==TYPE_SEPARATE_LINE){
-                var lineItem = {
-                    from:"",
-                    to: "",
-                    message: "",
-                    operator: "",
-                    number:0,
-                    type:LINE_SEQUENCE
-                }
+                var lineItem = _getLineItem(LINE_SEQUENCE,"","SEQUENCE");
+                
                 if(item.type==TYPE_SEPARATE_LINE){
                     lineItem.type = LINE_SEPRATE
                     lineItem.message = item.value;
@@ -1616,6 +1767,94 @@ var NutUml;
         }
         return obj;
     }
+    function _getParByName(obj,name){
+        for(var i=0;i<obj.participant.length;i++){
+            if(name== obj.participant[i].name){
+                return obj.participant[i];
+            }
+        }
+        return undefined;
+    }
+    function _patchLine(line,doc){
+        var fromArr = doc[line.from];
+        var toArr = doc[line.to];
+
+        if(line.from==="" && line.to===""){
+            return;
+        }
+        if(line.from===line.to){
+            // self
+            if(fromArr!== undefined && fromArr.length>0){
+                line.x += fromArr.length * ACTIVE_WIDTH/2 
+                line.toX += toArr.length* ACTIVE_WIDTH/2 
+            }
+        }
+        if(line.x<line.toX){
+            if(fromArr!== undefined && fromArr.length>0){
+                line.x += fromArr.length * ACTIVE_WIDTH/2 
+            }
+            if(toArr!== undefined && toArr.length>0){
+                line.toX = line.toX + (toArr.length-2) * ACTIVE_WIDTH/2
+            }
+        }else if(line.x>line.toX){
+            if(fromArr!== undefined && fromArr.length>0){
+                line.x += fromArr.length * ACTIVE_WIDTH/2 
+            }
+            if(toArr!== undefined && toArr.length>0){
+                line.toX +=  ACTIVE_WIDTH/2
+            }
+        }
+    }
+
+    function _calcActiveOne(line,doc,j,obj){
+        var item = line.active[j];
+        var arr = doc[item.participant];
+        var par = _getParByName(obj,item.participant);
+        if(par===undefined){
+            console.log("undefined" + item.participant)
+            return;
+        }
+        var y = line.y;
+        if(item.type=="activate"){
+            if(arr === undefined){
+                arr = []
+                arr.push({x:par.lineX,topY:y})
+                doc[item.participant]=arr;
+            }else{
+                var lineX = arr[arr.length-1].x + ACTIVE_WIDTH/2
+                arr.push({x:lineX,topY:y})
+            }
+            _patchLine(line,doc)
+        }else{
+            _patchLine(line,doc)
+
+            var one = arr.pop();
+            if(one === undefined){
+                //error
+                return;
+            }
+            one.bottomY = y;
+            one.type = item.type;
+            return one;
+        }
+    }
+    function _calcActiveLines(obj){
+        var doc = [];
+        for(var i=0;i<obj.lines.length;i++){
+            var line = obj.lines[i];
+            if(line.active.length>0){
+                for(var j=0;j<line.active.length;j++){
+                    var one= _calcActiveOne(line,doc,j,obj)
+                    if(one !== undefined){
+                        obj.activeLines.push(one);
+                    }
+                }
+            }else{
+                _patchLine(line,doc)
+            }
+        }
+        obj.activeLines.reverse();
+    }
     
     NutUml = function (el) {
         this.el = el;
@@ -1653,6 +1892,7 @@ var NutUml;
         _calcLineSize(ctx,secObj.lines);
         _calcParticipantXY(secObj);
         _calcLinesXY(secObj);
+        _calcActiveLines(secObj);
 
         this.canvas.width = secObj.width;
         this.canvas.height = secObj.height;
@@ -1664,6 +1904,7 @@ var NutUml;
         }
         _drawParticipant(ctx,secObj);
         _drawGroupAlt(ctx,secObj);
+        _drawActive(ctx,secObj);
         _drawLines(ctx,secObj);
         this.img.src=this.canvas.toDataURL();
         return "";
@@ -1805,6 +2046,51 @@ var NutUml;
                     type: TYPE_COMMA,
                     value: str[cur++],
                 }); // 存储分隔符并将cur向右移动
+            } else if('.'==str[cur]) {
+                var message = "";
+                if(cur+2 < str.length && '.'==str[cur+1] && '.'==str[cur+2]) {
+                    cur=cur+3;
+                    while(cur<str.length){
+                        if('.'==str[cur] && cur+2 < str.length && '.'==str[cur+1] && '.'==str[cur+2]){
+                            cur=cur+3
+                            break;
+                        }
+                        if('\n'==str[cur]){
+                            break;
+                        }
+                        message += str[cur++]
+                    }
+                }else{
+                    return "syntax error"
+                }
+                tokens.push({
+                    type: TYPE_DELAY,
+                    value: message,
+                }); // 存储分隔符并将cur向右移动
+            }else if('|'==str[cur]) {
+                var message = "";
+                if(cur+2 < str.length && '|'==str[cur+1] && '|'==str[cur+2]) {
+                    //  match |||
+                    cur=cur+3;
+                }else if(cur +1<str.length && '|'==str[cur+1]){
+                    cur+=2;
+                    while(cur<str.length){
+                        if('|'==str[cur] && cur+1 < str.length && '|'==str[cur+1]){
+                            cur=cur+2
+                            break;
+                        }
+                        if('\n'==str[cur]){
+                            break;
+                        }
+                        message += str[cur++]
+                    }
+                }else{
+                    return "syntax error"
+                }
+                tokens.push({
+                    type: TYPE_SPACE,
+                    value: message,
+                }); // 存储分隔符并将cur向右移动
             } else if(operators.includes(str[cur])) {
                 let operator = "" + str[cur++];
                 while(cur < str.length && operators.includes(str[cur])) {
@@ -1848,7 +2134,7 @@ var NutUml;
                     return "syntax error"
                 }
             }else {
-                return "包含非法字符：" + str[cur];
+                return "syntax error：" + str[cur];
             }
 
         }
