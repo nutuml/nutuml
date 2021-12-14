@@ -1,0 +1,38 @@
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>NutUml Example</title>
+      <style>
+        body{
+            width: 93%;
+            height: 98vh;/**屏幕高度百分百*/
+             display: flex;
+             align-items:center;
+             justify-content:center;
+         }
+         .main{
+             display: flex;
+             align-items:center;
+             justify-content:center;
+         }
+    </style>
+</head>
+<body>
+<script src="nutuml.js"></script>
+<div class="main">
+  <div id="myCanvas" style="border:0px solid #c3c3c3;"></div>
+</div>
+<script>
+    var c=document.getElementById("myCanvas");
+    var uml = new NutUml(c);
+    uml.debug=true
+
+    window.addEventListener('message', event => {
+        const message = event.data;
+        console.log('Webview接收到的消息：', message);
+        uml.drawUml(message.text);
+    });
+</script>
+</body>
+</html>
