@@ -1,7 +1,7 @@
 'use strict'
 
 /**
- * NutUml version 0.5.0
+ * NutUml version 0.6.0
  */
 
 var NutUml;
@@ -15,6 +15,7 @@ var NutUml;
     var pagePadding = 10;
     var lineHeight = fontSize + linePadding;
     var shadowColor = "#9A6A7A";
+    var boxColor = "#EEEEEE";
     var fillStyle = "#FEFECE";
     var fillStyleWhite = "#ffffff";
     var textFillStyle = "#333";
@@ -90,7 +91,7 @@ var NutUml;
     const reservedWords = ['hide','autonumber','as', 'participant', 'actor', 'boundary', 
         'control', 'entity', 'database', 'collections','title','header','footer',
         'alt','else','opt','loop','par','break','critical','group','end','note',
-        'left','right','of','over','ref','activate','deactivate','destroy'];
+        'left','right','of','over','ref','activate','deactivate','destroy','box'];
     const participantWords = ['participant', 'actor', 'boundary', 'control', 'entity', 'database', 'collections'];
     const oneLineWords = ['title','header','footer','alt','else','opt','loop','par','break','critical','group'];
     const multiLineWords = ['title','note','ref'];
@@ -375,6 +376,16 @@ var NutUml;
             var fObj = _measureText(ctx,obj.footer);
             obj.footerHeight = fObj.height;
         }
+        if(obj.box.length>0){
+            for(var i=0;i<obj.box.length;i++){
+               var boxItem = obj.box[i];
+               if(boxItem.title !=null && boxItem.title.length>0){ 
+                   var tObj = _measureText(ctx,boxItem.title);
+                   obj.boxHeight = Math.max(obj.boxHeight, tObj.height);
+               }
+            }
+
+        }
     }
     function _calcParticipantSize(ctx,participant){
         ctx.font = font;
@@ -474,7 +485,7 @@ var NutUml;
         for(var i=0;i<len;i++){
             obj.maxParticipantHeight = Math.max(obj.participant[i].height,obj.maxParticipantHeight);
         }
-        var picPadding = pagePadding + obj.titleHeight + obj.headerHeight;
+        var picPadding = pagePadding + obj.titleHeight + obj.headerHeight + obj.boxHeight;
         for(var i=0;i<len;i++){
             var item = obj.participant[i];
             if(i==0){
@@ -502,8 +513,11 @@ var NutUml;
             item.lineX = item.x + item.width/2;
             item.lineY = item.y + item.height;
         }
-        obj.height = Math.ceil(obj.titleHeight + obj.footerHeight + obj.headerHeight 
+        obj.height = Math.ceil(obj.titleHeight + obj.footerHeight + obj.headerHeight + obj.boxHeight 
             + lineHeight + obj.innerHeight + obj.maxParticipantHeight*2 + pagePadding*2);
+        if(obj.box.length>0){
+            obj.height += pagePadding;
+        }
         var lastWidth = obj.participant[len-1].width;
         var lastLineWidth = arr[obj.participant[len-1].name + "_" + obj.participant[len-1].name];
         if(lastLineWidth && lastLineWidth>lastWidth/2){
@@ -513,7 +527,7 @@ var NutUml;
     }
     function _calcLinesXY(obj){
         var hisArr = [];
-        var curY = pagePadding + obj.headerHeight + obj.titleHeight + obj.maxParticipantHeight;
+        var curY = pagePadding + obj.headerHeight + obj.boxHeight + obj.titleHeight + obj.maxParticipantHeight;
         var curGroupItem, lastGroupItem;
         var minX = 0;
         var maxX = 0;
@@ -726,6 +740,37 @@ var NutUml;
             _rectangle(ctx,item);
         }
     }
+
+    function _drawOneBox(ctx,item){
+        
+        ctx.save()
+        ctx.beginPath()
+
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=0;
+        ctx.shadowBlur=1;
+        ctx.fillStyle= boxColor;
+        if(item.color !=null){
+           ctx.fillStyle = item.color
+        }
+        ctx.fillRect(item.x, item.y, item.width, item.height);
+
+        ctx.strokeStyle= strokeStyle;
+        ctx.strokeRect(item.x, item.y, item.width, item.height);
+        ctx.stroke();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save()
+        ctx.font= font;
+        ctx.fillStyle = textFillStyle;
+        
+        var mObj = _measureText(ctx,item.title);
+        var drawX = item.x + (item.width - mObj.width)/2
+        _onlyDrawText(ctx, drawX, item.y,item.title, fontSize,true);
+        ctx.fill()
+        ctx.restore()
+    }
     function _drawObj(ctx,obj){
         if(obj.titleHeight>0){
             ctx.font = TITLE_FONT;
@@ -746,6 +791,11 @@ var NutUml;
             var footerX = obj.width - pagePadding - fObj.width;
             _drawText(ctx,footerX, obj.height-obj.footerHeight,obj.footer,false);
         }
+        if(obj.box.length>0){
+           for(var i=0;i<obj.box.length;i++){
+               _drawOneBox(ctx,obj.box[i])
+           }
+        }
     }
     function _drawParticipant(ctx,obj){
         var len = obj.participant.length;
@@ -753,6 +803,7 @@ var NutUml;
         
         for(var i=0;i<len;i++){
             var item = obj.participant[i];
+            if(item.name=="[" || item.name=="]")continue
             _drawOneParticipant(ctx,item);
             var bottom = _copyObj(item);
             bottom.y = item.y + obj.innerHeight + lineHeight + item.height;
@@ -1422,6 +1473,7 @@ var NutUml;
     function _getObj(tokens){
         var obj = {
             participant : [],
+            box : [],
             lines : [],
             activeLines : [],
             innerHeight:0,
@@ -1431,6 +1483,7 @@ var NutUml;
             header: '',
             footer: '',
             headerHeight: 0,
+            boxHeight: 0,
             titleHeight: 0,
             footerHeight: 0,
             autonumber:false,
@@ -1440,11 +1493,34 @@ var NutUml;
         var cur =0;
         var participantArr = [];
         var number = 1;
+        var inBox = false;
         while(cur<len){
             var item = tokens[cur++];
             if(item.type==TYPE_RESERVED){
                 if("ref"==item.value){
                     cur = _parseRef(tokens,obj,cur)
+                    continue;
+                }
+                if("box"==item.value){
+                    //  case
+                    // box "Internal Service" #LightBlue
+                    if(cur+1<len){
+                       var nextItem = tokens[cur];
+                       var next2 = tokens[cur+1];
+                       if(next2.type == TYPE_WORD && item.line==nextItem.line && item.line==next2.line){
+                           obj.box.push({title:nextItem.value,color:next2.value,start:null,end:null}) 
+                           cur +=2
+                           inBox =true
+                           continue
+                       }else if(item.line==nextItem.line){
+                           obj.box.push({title:nextItem.value,color:null,start:null,end:null}) 
+                           cur +=1
+                           inBox =true
+                           continue
+                       } 
+                    } 
+                    obj.box.push({title:'',color:null,start:null,end:null}) 
+                    inBox=true
                     continue;
                 }
                 if("note"==item.value){
@@ -1690,6 +1766,17 @@ var NutUml;
                     continue
                 }
                 if("end"==item.value){
+                    // handle end box
+                    if(cur>=len){
+                        obj.lines.push(_getLineItem(LINE_END,"",item.value));
+                        continue
+                    }
+                    var nextItem = tokens[cur]
+                    if(nextItem.value=='box'){
+                        inBox=false
+                        cur++
+                        continue
+                    }
                     obj.lines.push(_getLineItem(LINE_END,"",item.value));
                     continue
                 }
@@ -1720,6 +1807,7 @@ var NutUml;
                                 type:item.value 
                             });
                             participantArr.push(opItem.value);
+                            setBox(obj,inBox,opItem.value)
                             cur +=2
                             continue
                         }else if(opItem.type == TYPE_STRING && asItem.value=="as" && valItem.type == TYPE_WORD){
@@ -1731,6 +1819,7 @@ var NutUml;
                                 type:item.value 
                             });
                             participantArr.push(valItem.value);
+                            setBox(obj,inBox,valItem.value)
                             cur +=2
                             continue
                         }
@@ -1745,6 +1834,7 @@ var NutUml;
                             type:item.value 
                         });
                         participantArr.push(opItem.value);
+                        setBox(obj,inBox,opItem.value)
                         continue
                     }
                 }
@@ -1778,6 +1868,11 @@ var NutUml;
                     break;
                 }
                 var opItem = tokens[cur++];
+                if(opItem.type != TYPE_OPERATOR){
+                   // syntax error 
+                   obj.error = item;
+                   return obj;
+                } 
                 if(cur>=len){
                     break;
                 }
@@ -1827,7 +1922,39 @@ var NutUml;
                 obj.lines.push(lineItem);
             }
         }
+        sortParticipant(obj);
         return obj;
+    }
+    function sortParticipant(obj){
+        var arr = [];
+        var head = null;
+        var tail = null;
+        for(var j=0;j<obj.participant.length;j++){
+           var item = obj.participant[j];
+           if(item.name=="["){
+               head = item;
+           }else if(item.name=="]"){
+               tail = item;
+           }else{
+               arr.push(item);
+	   }
+        }
+        if(tail!=null){
+           arr.push(tail)
+        }
+        if(head!=null){
+           arr.unshift(head)
+        }
+        obj.participant=arr;
+    }
+    function setBox(obj,inBox,val){
+       if(inBox){
+          var box = obj.box[obj.box.length-1];
+          if( box.start==null){
+              box.start = val 
+           }
+         box.end=val
+       }
     }
     function _getParByName(obj,name){
         for(var i=0;i<obj.participant.length;i++){
@@ -1918,14 +2045,46 @@ var NutUml;
         obj.activeLines.reverse();
     }
     
+    function _calcBoxXY(secObj){
+       if(secObj.box.length==0)
+          return
+
+       for(var i=0;i<secObj.box.length;i++){
+           var item = secObj.box[i];
+           item.x=0;
+           for(var j=0;j<secObj.participant.length;j++){
+               var p = secObj.participant[j];
+               if(p.name==item.start){
+                    item.x = p.x - pagePadding
+                    break;
+               }
+           }
+           var w = 0;
+           for(var j=0;j<secObj.participant.length;j++){
+                var p = secObj.participant[j];
+                if(p.name==item.end){
+                    w = p.x - item.x + p.width + pagePadding
+                    break;
+                }
+            }
+           
+           item.y=secObj.titleHeight + secObj.headerHeight;
+           item.width=w;
+           item.height=secObj.height-secObj.titleHeight-secObj.headerHeight-secObj.footerHeight-pagePadding; 
+       } 
+    }
     NutUml = function (el) {
         this.el = el;
         el.innerHTML="";
         var canvas = document.createElement("canvas");
         this.context = canvas.getContext("2d");
         var img = document.createElement("img");
+        var message = document.createElement("div");
+        message.style = "background-color: #fcf8e3;";
+        el.appendChild(message);
         el.appendChild(img);
         this.img = img;
+        this.message = message;
         this.canvas = canvas;
         this.tokens = [];
         this.debug = false;
@@ -1945,6 +2104,16 @@ var NutUml;
         if(this.debug){
             console.log(secObj)
         }
+        if(secObj.error !==undefined){
+            console.log("error" + JSON.stringify(secObj.error))
+            this.message.innerText = "Syntax error near \"" + secObj.error.value + "\" at line " + secObj.error.line
+            this.message.style = "background-color: #fcf8e3; padding:15px; font-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif; font-size: 14px; line-height: 1.42857143; color: #333;";
+            return ""; 
+        }else{
+            this.message.innerText = "";
+            this.message.style = "";
+        }
+
         var ctx= this.context;
         ctx.lineWidth=1;
         
@@ -1955,6 +2124,7 @@ var NutUml;
         _calcParticipantXY(secObj);
         _calcLinesXY(secObj);
         _calcActiveLines(secObj);
+        _calcBoxXY(secObj);
 
         this.canvas.width = secObj.width;
         this.canvas.height = secObj.height;
@@ -1976,7 +2146,7 @@ var NutUml;
         if(result){
             return result;
         }
-        if(c=='#'){
+        if(c=='#' || c=='[' || c==']'){
             return true;
         }
         return c.charCodeAt(0)>255;
@@ -1993,9 +2163,11 @@ var NutUml;
         let tokens = [];
         var multiLineFlag = false;
         var multiLine = false;
+        var curLine =1;
         while(cur < str.length) {
             if(newLines.includes(str[cur]) && multiLineFlag ==true){
                 multiLine = true
+                curLine++
                 multiLineFlag = false
                 cur++
             }
@@ -2003,6 +2175,7 @@ var NutUml;
                 // handle multiline message until of 'end' at begin of line
                 var message = "";
                 var lineStart = true;
+                var multiStart = curLine;
                 while(cur < str.length){
                     if(lineStart){
                         if(isWordChar(str[cur])) { // 读单词
@@ -2018,10 +2191,12 @@ var NutUml;
                                 tokens.push({
                                     type: TYPE_MESSAGE,
                                     value: message.trimEnd(),
+                                    line: multiStart 
                                 });
                                 tokens.push({
                                     type: TYPE_RESERVED,
                                     value: word,
+                                    line: curLine
                                 });
                                 break;
                             }else{
@@ -2034,6 +2209,7 @@ var NutUml;
                     }else{
                         if(newLines.includes(str[cur])){
                             lineStart = true;
+                            curLine++
                         }
                         message += str[cur++]
                     }
@@ -2041,6 +2217,9 @@ var NutUml;
                 multiLine =  false
             }
             if(/\s/.test(str[cur])) { // 跳过空格
+                if(str[cur]=='\n'){
+                   curLine++;
+                }
                 cur++;
             } else if(isWordChar(str[cur])) { // 读单词
                 
@@ -2055,9 +2234,10 @@ var NutUml;
                     tokens.push({
                         type: TYPE_RESERVED,
                         value: word,
+                        line: curLine
                     }); // 存储保留字(关键字)
                     if(multiLineWords.includes(word)){
-                        if(tokens[tokens.length-2].value!="end"){
+                        if(tokens.length<2 || tokens[tokens.length-2].value!="end"){
                             multiLineFlag = true;
                         }
                     }
@@ -2073,12 +2253,14 @@ var NutUml;
                         tokens.push({
                             type: TYPE_MESSAGE,
                             value: tempWord,
+                            line: curLine
                         })
                     }
                 } else {
                     tokens.push({
                         type: TYPE_WORD,
                         value: word,
+                        line: curLine
                     }); // 存储普通单词                            
                 }
             } else if(separators.includes(str[cur])) {
@@ -2086,6 +2268,7 @@ var NutUml;
                 tokens.push({
                     type: TYPE_SEPARATORS,
                     value: str[cur++],
+                    line: curLine
                 }); // 存储分隔符并将cur向右移动
                 
                 let word = "";
@@ -2102,11 +2285,13 @@ var NutUml;
                 tokens.push({
                     type: TYPE_MESSAGE,
                     value: word,
+                            line: curLine
                 }); 
             } else if(','==str[cur]) {
                 tokens.push({
                     type: TYPE_COMMA,
                     value: str[cur++],
+                            line: curLine
                 }); // 存储分隔符并将cur向右移动
             } else if('.'==str[cur]) {
                 var message = "";
@@ -2128,6 +2313,7 @@ var NutUml;
                 tokens.push({
                     type: TYPE_DELAY,
                     value: message,
+                            line: curLine
                 }); // 存储分隔符并将cur向右移动
             }else if('|'==str[cur]) {
                 var message = "";
@@ -2152,6 +2338,7 @@ var NutUml;
                 tokens.push({
                     type: TYPE_SPACE,
                     value: message,
+                    line: curLine
                 }); // 存储分隔符并将cur向右移动
             } else if(operators.includes(str[cur])) {
                 let operator = "" + str[cur++];
@@ -2161,6 +2348,7 @@ var NutUml;
                 tokens.push({
                     type: TYPE_OPERATOR,
                     value: operator,
+                    line: curLine
                 }); // 存储运算符                        
             } else if('"'==str[cur]){
                 let operator = "";
@@ -2174,6 +2362,7 @@ var NutUml;
                 tokens.push({
                     type: TYPE_STRING,
                     value: operator,
+                    line: curLine
                 });
             } else if('='==str[cur]){
                 cur++;
@@ -2191,6 +2380,7 @@ var NutUml;
                     tokens.push({
                         type: TYPE_SEPARATE_LINE,
                         value: message,
+                        line: curLine
                     });
                 }else{
                     return "syntax error"
