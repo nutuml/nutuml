@@ -16,11 +16,16 @@ Server --> Client : Response
 
 Below is a gif to show the demo.
 
-![Quick start demo](nutuml.gif)
+![Quick start demo](images/nutuml.gif)
+
+[Gif demo](images/nutuml.gif)
 
 For more syntax reference. please refer to [nutuml homepage](https://www.nutuml.com/) 
 
 ## Release Notes
+### 0.2.1
+1. fix gif unable to show issue in readme.md
+
 ### 0.2.0
 1. add Quick start in readme
 
