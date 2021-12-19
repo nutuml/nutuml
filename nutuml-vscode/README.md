@@ -18,13 +18,13 @@ Below is a gif to show the demo.
 
 ![Quick start demo](images/nutuml.gif)
 
-[Gif demo](images/nutuml.gif)
 
 For more syntax reference. please refer to [nutuml homepage](https://www.nutuml.com/) 
 
 ## Release Notes
-### 0.2.1
+### 0.3.0
 1. fix gif unable to show issue in readme.md
+2. update nutuml core to 0.6.0
 
 ### 0.2.0
 1. add Quick start in readme

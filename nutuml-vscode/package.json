@@ -2,7 +2,7 @@
 	"name": "nutuml",
 	"displayName": "Nutuml",
 	"description": "",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"publisher":"junfengliang",
 	"repository": {
 		"url": "https://github.com/junfengliang/nutuml/nutuml-vscode"
