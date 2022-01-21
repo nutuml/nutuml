@@ -2496,5 +2496,5 @@ var nutuml;
 
 })()
 if (typeof module !== 'undefined' && typeof exports === 'object') {
-    module.exports = NutUml;
+    module.exports = nutuml;
 }

@@ -2503,7 +2503,7 @@ var nutuml;
 
 })()
 if (true) {
-    module.exports = NutUml;
+    module.exports = nutuml;
 }
 
 
