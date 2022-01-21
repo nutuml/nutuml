@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as mdItContainer from 'markdown-it-container';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -83,7 +84,64 @@ export function activate(context: vscode.ExtensionContext) {
   });
     
   context.subscriptions.push(disposable);
+  const pluginKeyword = 'nutuml';
+    const tokenTypeInline = 'inline';
+    const ttContainerOpen = 'container_' + pluginKeyword + '_open';
+    const ttContainerClose = 'container_' + pluginKeyword + '_close';
+
+    return {
+        extendMarkdownIt(md:any) {
+            md.use(mdItContainer, pluginKeyword, {
+                anyClass: true,
+                validate: (info:string) => {
+                    return info.trim() === pluginKeyword;
+                },
+
+                render: (tokens:any, idx:any) => {
+                    const token = tokens[idx];
+
+                    var src = '';
+                    if (token.type === ttContainerOpen) {
+                        for (var i = idx + 1; i < tokens.length; i++) {
+                            const value = tokens[i]
+                            if (value === undefined || value.type === ttContainerClose) {
+                                break;
+                            }
+                            src += value.content;
+                            if (value.block && value.nesting <= 0) {
+                                src += '\n';
+                            }
+                            // Clear these out so markdown-it doesn't try to render them
+                            value.tag = '';
+                            value.type = tokenTypeInline;
+                            value.content = '';
+                            value.children = [];
+                        }
+                    }
+
+                    if (token.nesting === 1) {
+                        return `<div class="${pluginKeyword}">${preProcess(src)}`;
+                    } else {
+                        return '</div>';
+                    }
+                }
+            });
+
+            const highlight = md.options.highlight;
+            md.options.highlight = (code:string, lang:string) => {
+                if (lang && lang.match(/\bnutuml\b/i)) {
+                    return `<pre style="all:unset;"><div class="${pluginKeyword}">${preProcess(code)}</div></pre>`;
+                }
+                return highlight(code, lang);
+            };
+            return md;
+        }
+    }
 }
+const preProcess = (source:string) =>
+    source
+        .replace(/\</g, '&lt;')
+        .replace(/\>/g, '&gt;');
 
 function getWebviewContent() {
     return `<!DOCTYPE html>
