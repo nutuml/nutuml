@@ -1,10 +1,11 @@
 'use strict'
 
 /**
- * NutUml version 0.6.0
+ * NutUml version 0.7.0
  */
 
 var NutUml;
+var nutuml;
 
 (function(){
     var fontSize = 14;
@@ -13,6 +14,8 @@ var NutUml;
     var paddingWidth = 10;
     var paddingHeight = 5;
     var pagePadding = 10;
+    var participantPadding = 10;
+
     var lineHeight = fontSize + linePadding;
     var shadowColor = "#9A6A7A";
     var boxColor = "#EEEEEE";
@@ -91,7 +94,7 @@ var NutUml;
     const reservedWords = ['hide','autonumber','as', 'participant', 'actor', 'boundary', 
         'control', 'entity', 'database', 'collections','title','header','footer',
         'alt','else','opt','loop','par','break','critical','group','end','note',
-        'left','right','of','over','ref','activate','deactivate','destroy','box'];
+        'left','right','of','over','ref','activate','deactivate','destroy','box','skinparam'];
     const participantWords = ['participant', 'actor', 'boundary', 'control', 'entity', 'database', 'collections'];
     const oneLineWords = ['title','header','footer','alt','else','opt','loop','par','break','critical','group'];
     const multiLineWords = ['title','note','ref'];
@@ -498,7 +501,9 @@ var NutUml;
             var preItem = obj.participant[i-1];
             var val = preItem.name + "_" + item.name;
             var val2 = item.name + "_" + preItem.name;
-            var span = minWidth;
+            var minPar = preItem.width  + participantPadding;
+            var span = Math.max( minWidth,minPar);
+            
             if(arr[val] !== undefined){
                 span = Math.max(span,arr[val])
             }
@@ -1348,6 +1353,28 @@ var NutUml;
             active:[]
         }
     }
+    function isIntNum(val){
+        var regPos = /^\d+$/; 
+        if(regPos.test(val)){
+            return true;
+        }else{
+            return false;
+        } 
+    }
+    function _parseSkinparam(tokens,obj,cur){
+       var len = tokens.length;
+        // handle below case:
+        // skinparam maxMessageSize 50
+       if(cur+1<len){
+          var nameItem = tokens[cur]
+          var valueItem = tokens[cur+1]
+          if("maxMessageSize" == nameItem.value && isIntNum(valueItem.value)){
+             obj.maxMessageSize = valueItem.value
+             cur +=2
+          }
+       } 
+       return cur
+    }
     function _parseRef(tokens,obj,cur){
         var len = tokens.length;
 
@@ -1487,6 +1514,7 @@ var NutUml;
             titleHeight: 0,
             footerHeight: 0,
             autonumber:false,
+            maxMessageSize:0,
             hideFootbox:false
         };
         var len = tokens.length;
@@ -1499,6 +1527,10 @@ var NutUml;
             if(item.type==TYPE_RESERVED){
                 if("ref"==item.value){
                     cur = _parseRef(tokens,obj,cur)
+                    continue;
+                }
+                if("skinparam"==item.value){
+                    cur = _parseSkinparam(tokens,obj,cur)
                     continue;
                 }
                 if("box"==item.value){
@@ -1925,6 +1957,73 @@ var NutUml;
         sortParticipant(obj);
         return obj;
     }
+    function wordwrap(ctx,text,maxWidth){
+        var arr = text.split("\n");
+        var lines = [];
+        for (var i = 0; i < arr.length; i++) {
+            var line = arr[i];
+            var lineWidth = ctx.measureText(line).width;
+            if(lineWidth<=maxWidth){
+                lines.push(line);
+                continue;
+            }
+            let cur =0; 
+            var tmpLine = "";
+
+            while(cur<line.length){                
+                let word = "" + text[cur++];
+                while(cur < text.length && text[cur]!=' ' && text.charCodeAt(cur)<256) {                        
+                    word += text[cur++];
+                }
+                var wordWidth = ctx.measureText(word).width;
+                let tempLineWidth = ctx.measureText(tmpLine).width;
+
+                if(wordWidth>maxWidth){
+                    let wordCur =0;
+                    let tmpWord = word[wordCur++];
+                    while(wordCur<word.length){
+                        let tmpWidth = ctx.measureText(tmpWord + word[wordCur]).width;
+                        if(tmpWidth+tempLineWidth>maxWidth){
+                            lines.push(tmpLine+tmpWord);
+                            tmpLine = "";
+                            tempLineWidth = 0;
+                            tmpWord=word[wordCur];
+                        }else{
+                            tmpWord += word[wordCur];
+                        }
+                        wordCur++
+                    }
+                    tmpLine = tmpWord
+                }else{
+                    if(wordWidth+tempLineWidth>maxWidth){
+                        lines.push(tmpLine.trim())
+                        if(word[0]!=' ' || word.length>1){
+                            tmpLine = word;
+                        }else{
+                            tmpLine = "";
+                        }                        
+                    }else{
+                        tmpLine +=word;
+                    }
+                }
+            }
+            if(tmpLine.length>0){
+                lines.push(tmpLine.trim())
+            }
+        }
+        return lines.join('\n');
+    }
+    function handleMaxMessage(ctx,obj){
+        ctx.save()
+        ctx.font= font;
+        ctx.fillStyle = textFillStyle;
+        if(obj.maxMessageSize<=0)return;
+        for(var i=0;i<obj.lines.length;i++){
+            var item = obj.lines[i];
+            item.message = wordwrap(ctx,item.message,obj.maxMessageSize);
+        } 
+        ctx.restore()
+    }
     function sortParticipant(obj){
         var arr = [];
         var head = null;
@@ -2117,7 +2216,7 @@ var NutUml;
         var ctx= this.context;
         ctx.lineWidth=1;
         
-
+        handleMaxMessage(ctx,secObj);
         _calcObjSize(ctx,secObj);
         _calcParticipantSize(ctx,secObj.participant);
         _calcLineSize(ctx,secObj);
@@ -2140,6 +2239,10 @@ var NutUml;
         _drawLines(ctx,secObj);
         this.img.src=this.canvas.toDataURL();
         return "";
+    };
+    NutUml.prototype.render = function(text){
+        this.drawUml(text);
+        return "<img src='" + this.canvas.toDataURL() + "' />";
     };
     function isWordChar(c){
         var result = /[a-z0-9]/i.test(c);
@@ -2393,6 +2496,7 @@ var NutUml;
         this.tokens = tokens;
         return tokens;
     };
+    nutuml = new NutUml(document.createElement("div"));
 
 })()
 if (typeof module !== 'undefined' && typeof exports === 'object') {
