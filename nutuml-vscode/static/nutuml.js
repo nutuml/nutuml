@@ -14,6 +14,8 @@ var nutuml;
     var paddingWidth = 10;
     var paddingHeight = 5;
     var pagePadding = 10;
+    var participantPadding = 10;
+
     var lineHeight = fontSize + linePadding;
     var shadowColor = "#9A6A7A";
     var boxColor = "#EEEEEE";
@@ -499,7 +501,9 @@ var nutuml;
             var preItem = obj.participant[i-1];
             var val = preItem.name + "_" + item.name;
             var val2 = item.name + "_" + preItem.name;
-            var span = minWidth;
+            var minPar = preItem.width  + participantPadding;
+            var span = Math.max( minWidth,minPar);
+            
             if(arr[val] !== undefined){
                 span = Math.max(span,arr[val])
             }
@@ -2496,5 +2500,5 @@ var nutuml;
 
 })()
 if (typeof module !== 'undefined' && typeof exports === 'object') {
-    module.exports = nutuml;
+    module.exports = NutUml;
 }

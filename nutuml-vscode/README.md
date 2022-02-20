@@ -22,6 +22,9 @@ Below is a gif to show the demo.
 For more syntax reference. please refer to [nutuml homepage](https://www.nutuml.com/) 
 
 ## Release Notes
+### 0.5.0 
+1. fix offset erro when participant is too long.
+
 ### 0.4.0
 1. support nutuml in markdown
 
