@@ -1,8 +1,28 @@
 # Nutuml README
 
-Nutuml is a tool for uml diargram. You can edit UML description text on the web page and view the generated UML diagram in real time.
+Nutuml is a tool for uml sequence  diargram. You can edit UML description text in vscode and preview the generated UML diagram in real time.
 
 ## Quick start
+
+### Use Nutuml in stand alone file 
+
+1. Create or open a markdown file with the suffix **.md**
+2. Input uml description text, a demo as follow
+
+<pre>
+```nutuml
+Client -> Server : Request
+Server --> Client : Response
+```
+</pre>
+
+
+1. Click the **Preview** button on the right top of the editor.
+
+Below is a picture to show the demo.
+![markdown-demo](images/markdown-demo.png)
+
+### Use Nutuml in stand alone file 
 
 1. Create or open a file with the suffix **.numl**
 2. Input uml description text, a demo as follow
@@ -37,14 +57,5 @@ For more syntax reference. please refer to [nutuml homepage](https://www.nutuml.
 
 ### 0.1.0
 1. upate nutuml to 0.5.0 to fix bug
-
-### 0.0.2
-1. Make preview picture in center
-2. support preview change when text editor changed
-
-### 0.0.1
-4. Initial release of nutuml
-
------------------------------------------------------------------------------------------------------------
 
 **Enjoy!**
