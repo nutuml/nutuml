@@ -1,113 +1,200 @@
-'use strict'
+class Participant{
+    name:string;
+    title:string;
+    type:string;
+    x?:number;
+    width?:number;
+    y?:number;
+    isBottom?:boolean;
+    lineX?:number;
+}
+interface ActiveItem{
+    type:string;
+    participant:string,
+    color:string,
+}
+interface Box{
+    x?:number;
+    start:string;
+    title:string,
+    color:string,
+    end?:string,
+    y?:number;
+    width?:number;
+    height?:number;
+}
+interface NoteItem{
+    direction: string;
+    message: string;
+    color?: string;
+    participant?: string;
+    participantTo?:string;
+}
+interface Line{
+    from:string,
+    to: string,
+    message: string,
+    operator: string,
+    number:number,
+    type: number,
+    typeName: string,
+    active:ActiveItem[],
+    noteItem?:NoteItem;
+    x?:number;
+    y?:number;
+    toX?:number;
+}
+interface SequenceObj{
+    participant : Participant[],
+    box : Box[],
+    lines : Line[],
+    activeLines : Line[],
+    innerHeight:number,
+    width:number,
+    height:number,
+    title: string, 
+    header: string,
+    footer: string,
+    headerHeight: number,
+    boxHeight: number,
+    titleHeight: number,
+    footerHeight: number,
+    autonumber:boolean,
+    maxMessageSize:number,
+    hideFootbox:boolean,
+    error?:any;
+    tranlateX?:number;
+}
+const fontSize = 14;
+const font = fontSize + "px Arial";
+const linePadding =5;
+const paddingWidth = 10;
+const paddingHeight = 5;
+const pagePadding = 10;
+const participantPadding = 10;
 
-/**
- * NutUml version 0.7.0
- */
+const lineHeight = fontSize + linePadding;
+const shadowColor = "#9A6A7A";
+const boxColor = "#EEEEEE";
+const fillStyle = "#FEFECE";
+const fillStyleWhite = "#ffffff";
+const textFillStyle = "#333";
+const strokeStyle = "#A80036";
+const NOTE_FILL_STYLE="#F6FF70"
+const NOTE_STROKE_STYLE="#BA0028"
 
-var NutUml;
-var nutuml;
+const toSelfHeight = 13;
+const FILL_RED = "#ff0000";
+const GROUP_TEXT_SIZE = 12;
+const GROUP_PADDING = 8;
 
-(function(){
-    var fontSize = 14;
-    var font = fontSize + "px Arial";
-    var linePadding =5;
-    var paddingWidth = 10;
-    var paddingHeight = 5;
-    var pagePadding = 10;
-    var participantPadding = 10;
+const GROUP_TEXT_FONE = 'bold '+ GROUP_TEXT_SIZE+ 'px Courier'
 
-    var lineHeight = fontSize + linePadding;
-    var shadowColor = "#9A6A7A";
-    var boxColor = "#EEEEEE";
-    var fillStyle = "#FEFECE";
-    var fillStyleWhite = "#ffffff";
-    var textFillStyle = "#333";
-    var strokeStyle = "#A80036";
-    const NOTE_FILL_STYLE="#F6FF70"
-    const NOTE_STROKE_STYLE="#BA0028"
-    
-    var toSelfHeight = 13;
-    const FILL_RED = "#ff0000";
-    const GROUP_TEXT_SIZE = 12;
-    const GROUP_PADDING = 8;
+const TITLE_SIZE = 28;
+const TITLE_FONT = TITLE_SIZE + "px Arial";
 
-    const GROUP_TEXT_FONE = 'bold '+GROUP_TEXT_SIZE+ 'px Courier'
+const TYPE_RESERVED = 1;
+const TYPE_WORD = 2;
+const TYPE_MESSAGE = 3;
+const TYPE_OPERATOR = 4;
+const TYPE_SEPARATORS = 5;
+const TYPE_STRING = 6;
+const TYPE_SEPARATE_LINE = 7;
+const TYPE_COMMA = 8;
+const TYPE_DELAY = 9;
+const TYPE_SPACE =10;
 
-    const TITLE_SIZE = 28;
-    var TITLE_FONT = TITLE_SIZE + "px Arial";
+const ALT_HEIGHT = 10;
+const END_HEIGHT = 10;
 
-    const TYPE_RESERVED = 1;
-    const TYPE_WORD = 2;
-    const TYPE_MESSAGE = 3;
-    const TYPE_OPERATOR = 4;
-    const TYPE_SEPARATORS = 5;
-    const TYPE_STRING = 6;
-    const TYPE_SEPARATE_LINE = 7;
-    const TYPE_COMMA = 8;
-    const TYPE_DELAY = 9;
-    const TYPE_SPACE =10;
+const TAB_LEFT_PADDING = 13;
+const TAB_RIGHT_PADDING = 15;
+const TAB_MIN_TEXT_WIDTH = 40;
+const TAB_HEIGHT = 14;
 
-    const ALT_HEIGHT = 10;
-    const END_HEIGHT = 10;
+const REF_MIN_WIDTH = 100;
+const REF_HEIGHT = 36;
 
-    const TAB_LEFT_PADDING = 13;
-    const TAB_RIGHT_PADDING = 15;
-    const TAB_MIN_TEXT_WIDTH = 40;
-    const TAB_HEIGHT = 14;
+const LINE_SEQUENCE = 1;
+const LINE_SEPRATE = 2;
+const LINE_ALT = 3;
+const LINE_ELSE =4;
+const LINE_GROUP = 5;
+const LINE_END = 6;
+const LINE_ONLY_NOTE =7;
+const LINE_REF =8;
+const LINE_DELAY =9;
+const LINE_SPACE =10;
+const REF_PADDING = 20;
 
-    const REF_MIN_WIDTH = 100;
-    const REF_HEIGHT = 36;
+const GROUP_LINE_LEFT_PADDING = 30;
+const GROUP_GROUP_LEFT_PADDING = 10;
+const GROUP_LINE_RIGHT_PADDING = 20;
+const GROUP_GROUP_RIGHT_PADDING = 20;
+const NOTE_PADDING_TOP = 15;
+const NOTE_PADDING_LEFT = 10;
+const NOTE_PADDING_BOTTOM = 5;
+const NOTE_PADDING_RIGHT = 15;
+const NOTE_MARGIN = 10;
 
-    const LINE_SEQUENCE = 1;
-    const LINE_SEPRATE = 2;
-    const LINE_ALT = 3;
-    const LINE_ELSE =4;
-    const LINE_GROUP = 5;
-    const LINE_END = 6;
-    const LINE_ONLY_NOTE =7;
-    const LINE_REF =8;
-    const LINE_DELAY =9;
-    const LINE_SPACE =10;
-    const REF_PADDING = 20;
+const ACTIVE_WIDTH = 10;
 
-    const GROUP_LINE_LEFT_PADDING = 30;
-    const GROUP_GROUP_LEFT_PADDING = 10;
-    const GROUP_LINE_RIGHT_PADDING = 20;
-    const GROUP_GROUP_RIGHT_PADDING = 20;
-    const NOTE_PADDING_TOP = 15;
-    const NOTE_PADDING_LEFT = 10;
-    const NOTE_PADDING_BOTTOM = 5;
-    const NOTE_PADDING_RIGHT = 15;
-    const NOTE_MARGIN = 10;
+//, 'collections'
+const iParticipant = ['actor', 'boundary', 'control', 'entity', 'database'];
+const reservedWords = ['hide','autonumber','as', 'participant', 'actor', 'boundary', 
+    'control', 'entity', 'database', 'collections','title','header','footer',
+    'alt','else','opt','loop','par','break','critical','group','end','note',
+    'left','right','of','over','ref','activate','deactivate','destroy','box','skinparam'];
+const participantWords = ['participant', 'actor', 'boundary', 'control', 'entity', 'database', 'collections'];
+const oneLineWords = ['title','header','footer','alt','else','opt','loop','par','break','critical','group'];
+const multiLineWords = ['title','note','ref'];
+const activeWords = ['activate','deactivate','destroy'];
+const groupWords = ['opt','loop','par','break','critical','group']
+const operators = ['-','>','<','->', '-->','<-','<--'];
+const fromOperators = ['->', '-->'];
+const dashOperators = ['<--', '-->'];
 
-    const ACTIVE_WIDTH = 10;
+const separators = [':'];
+const newLines = ['\r','\n'];
 
-    //, 'collections'
-    const iParticipant = ['actor', 'boundary', 'control', 'entity', 'database'];
-    const iPar = {
-        actor: { width: 34, height: 54 },
-        boundary: { width: 42, height: 26 },
-        control: {width: 26, height: 32},
-        entity: {width: 24, height: 26},
-        database: {width: 38, height: 50}
-    };
-    const reservedWords = ['hide','autonumber','as', 'participant', 'actor', 'boundary', 
-        'control', 'entity', 'database', 'collections','title','header','footer',
-        'alt','else','opt','loop','par','break','critical','group','end','note',
-        'left','right','of','over','ref','activate','deactivate','destroy','box','skinparam'];
-    const participantWords = ['participant', 'actor', 'boundary', 'control', 'entity', 'database', 'collections'];
-    const oneLineWords = ['title','header','footer','alt','else','opt','loop','par','break','critical','group'];
-    const multiLineWords = ['title','note','ref'];
-    const activeWords = ['activate','deactivate','destroy'];
-    const groupWords = ['opt','loop','par','break','critical','group']
-    const operators = ['-','>','<','->', '-->','<-','<--'];
-    const fromOperators = ['->', '-->'];
-    const dashOperators = ['<--', '-->'];
+export class Sequence{
+    iPar = new Map();
+    context:CanvasRenderingContext2D;
+    img:HTMLImageElement;
+    message:HTMLDivElement;
+    canvas:HTMLCanvasElement;
+    tokens:Array<any>;
+    debug:boolean;
+    constructor() { 
+        this.iPar.set("actor",{ width: 34, height: 54 });
+        this.iPar.set("boundary",{ width: 42, height: 26 });
+        this.iPar.set("control",{ width: 26, height: 32 });
+        this.iPar.set("entity",{ width: 24, height: 26 });
+        this.iPar.set("database",{ width: 38, height: 50 });
+        
+        var canvas = document.createElement("canvas");
+        this.context = canvas.getContext("2d");
+        var img = document.createElement("img");
+        var message = document.createElement("div");
+        message.style.setProperty("background-color","#fcf8e3");
+        this.img = img;
+        this.message = message;
+        this.canvas = canvas;
+        this.tokens = [];
+        this.debug = false;
+    }
 
-    const separators = [':'];
-    const newLines = ['\r','\n'];
-
-    function _groupRectangle(ctx,item){
+    _measureText(ctx:any,title:string,fontHeight:number){
+        fontHeight = fontHeight || fontSize;
+        var obj = { width: 0, height: 0};
+        var arr = title.split("\n");
+        arr.forEach(function(item){
+            obj.width = Math.max(obj.width,ctx.measureText(item).width)
+        })
+        obj.height = arr.length * (fontHeight+paddingHeight) + paddingHeight;
+        return obj;
+    }
+    _groupRectangle(ctx:any,item:any){
         var frameY = item.cornerY + GROUP_PADDING;
         var frameHeight = item.height - GROUP_PADDING;
 
@@ -154,7 +241,7 @@ var nutuml;
         }
         // DRAW TAB
         ctx.font= GROUP_TEXT_FONE
-        var tabMeasure = _measureText(ctx,typeName,GROUP_TEXT_SIZE);
+        var tabMeasure = this._measureText(ctx,typeName,GROUP_TEXT_SIZE);
         var tabWidth = Math.max(tabMeasure.width,TAB_MIN_TEXT_WIDTH);
         tabWidth = tabWidth + TAB_LEFT_PADDING + TAB_RIGHT_PADDING;
         var tabHeight = tabMeasure.height;
@@ -185,20 +272,20 @@ var nutuml;
         ctx.restore()
         if((item.type ==LINE_ALT || item.type==LINE_GROUP) &&  item.message!=""){
             var msg =  "[" + item.message  + "]"
-            _drawGroupText(ctx,item.x +tabWidth +paddingWidth,frameY-2,msg,true)
+            this._drawGroupText(ctx,item.x +tabWidth +paddingWidth,frameY-2,msg,true)
         }
         if(item.type == LINE_REF){
             ctx.font= font;
-            var txtObj = _measureText(ctx,item.message,fontSize);
+            var txtObj = this._measureText(ctx,item.message,fontSize);
             var txtX = item.x + (item.width-txtObj.width)/2;
             console.log("item.x=",item.x,",txtX=",txtX,"item.width=",item.width,"txtwidth=",txtObj.width)
             var txtY = fillY + tabHeight + linePadding
-            _drawText(ctx,txtX,txtY,item.message,false);
+            this._drawText(ctx,txtX,txtY,item.message,false);
         }
-        _drawGroupText(ctx,item.x +paddingWidth,frameY-2,typeName,true)
+        this._drawGroupText(ctx,item.x +paddingWidth,frameY-2,typeName,true)
 
     }
-    function _drawCollections(ctx,item){
+    _drawCollections(ctx:any,item:any){
         var height = item.height - 4;
         var width = item.width -4;
         ctx.save()
@@ -239,10 +326,10 @@ var nutuml;
         ctx.fill();
         ctx.restore();
 
-        _drawText(ctx,item.x+paddingWidth,item.y+4,item.title,true)
+        this._drawText(ctx,item.x+paddingWidth,item.y+4,item.title,true)
         
     }
-    function _activeRectangle(ctx,item){
+    _activeRectangle(ctx:any,item:any){
         ctx.save()
         ctx.beginPath()
         ctx.shadowBlur=3;
@@ -269,7 +356,7 @@ var nutuml;
         ctx.fill();
         ctx.restore();
     }
-    function _rectangle(ctx,item){
+    _rectangle(ctx:any,item:any){
         ctx.save()
         ctx.beginPath()
         ctx.shadowBlur=3;
@@ -291,10 +378,10 @@ var nutuml;
         ctx.fill();
         ctx.restore();
 
-        _drawText(ctx,item.x+paddingWidth,item.y,item.title,true)
+        this._drawText(ctx,item.x+paddingWidth,item.y,item.title,true)
         
     }
-    function _noteRectangle(ctx,item){
+    _noteRectangle(ctx:any,item:any){
         var y = item.cornerY + NOTE_PADDING_TOP;
         var height = item.noteHeight - NOTE_PADDING_TOP - NOTE_PADDING_BOTTOM;
 
@@ -345,60 +432,60 @@ var nutuml;
         ctx.restore()
         ctx.beginPath()
 
-        _drawText(ctx,item.noteX+NOTE_PADDING_LEFT,y,item.noteItem.message,false)
+        this._drawText(ctx,item.noteX+NOTE_PADDING_LEFT,y,item.noteItem.message,false)
         
     }
-    function _oneParticipantSize(ctx,item){
+    _oneParticipantSize(ctx:any,item:any){
         var pw = paddingWidth;
         var ph = paddingHeight;
-        var obj = _measureText(ctx,item.title);
+        var obj = this._measureText(ctx,item.title,fontSize);
         item.width = obj.width + pw*2;
         item.height = obj.height;
         if("collections"==item.type){
             item.width +=4;
             item.height +=4;
         }
-        if(iParticipant.includes(item.type)){
+        if(iParticipant.indexOf(item.type)!==-1){
             item.width = obj.width;
-            item.height += iPar[item.type].height;
-            if(item.width<iPar[item.type].width){
-                item.width = iPar[item.type].width;
+            item.height += this.iPar.get(item.type).height;
+            if(item.width<this.iPar.get(item.type).width){
+                item.width = this.iPar.get(item.type).width;
             }
         }
     }
-    function _calcObjSize(ctx,obj){
+    _calcObjSize(ctx:any,obj:any){
         if(obj.title.length>0){
-            var mObj = _measureText(ctx,obj.title,TITLE_SIZE);
+            var mObj = this._measureText(ctx,obj.title,TITLE_SIZE);
             obj.titleHeight = mObj.height;
         }
         if(obj.header.length>0){
-            var hObj = _measureText(ctx,obj.header);
+            var hObj = this._measureText(ctx,obj.header,fontSize);
             obj.headerHeight = hObj.height;
         }
         if(obj.footer.length>0){
-            var fObj = _measureText(ctx,obj.footer);
+            var fObj = this._measureText(ctx,obj.footer,fontSize);
             obj.footerHeight = fObj.height;
         }
         if(obj.box.length>0){
             for(var i=0;i<obj.box.length;i++){
                var boxItem = obj.box[i];
                if(boxItem.title !=null && boxItem.title.length>0){ 
-                   var tObj = _measureText(ctx,boxItem.title);
+                   var tObj = this._measureText(ctx,boxItem.title,fontSize);
                    obj.boxHeight = Math.max(obj.boxHeight, tObj.height);
                }
             }
 
         }
     }
-    function _calcParticipantSize(ctx,participant){
+    _calcParticipantSize(ctx:any,participant:any){
         ctx.font = font;
         var len = participant.length;
         for (var i = 0; i < len; i++) {
             var item = participant[i];
-            _oneParticipantSize(ctx,item);
+            this._oneParticipantSize(ctx,item);
         }
     }
-    function _calcLineSize(ctx,secObj){
+     _calcLineSize(ctx:any,secObj:any){
         ctx.font = font;
         var lines = secObj.lines;
         var len = lines.length;
@@ -406,10 +493,10 @@ var nutuml;
 
         for (var i = 0; i < len; i++) {
             var item = lines[i];
-            var obj = _measureText(ctx,item.message);
+            var obj = this._measureText(ctx,item.message,fontSize);
             item.width = obj.width + pw*2;
             if(secObj.autonumber){
-                var numObj = _measureText(ctx,"99 ");
+                var numObj = this._measureText(ctx,"99 ",fontSize);
                 item.width += numObj.width;
             }
             if(item.type==LINE_ALT || item.type==LINE_GROUP){
@@ -440,14 +527,14 @@ var nutuml;
             }
             item.lineHeight = item.height;
             if(item.noteItem !=undefined){
-                var noteObj = _measureText(ctx,item.noteItem.message);
+                var noteObj = this._measureText(ctx,item.noteItem.message,fontSize);
                 item.noteWidth = noteObj.width + NOTE_PADDING_LEFT + NOTE_PADDING_RIGHT;
                 item.noteHeight = noteObj.height + NOTE_PADDING_TOP + NOTE_PADDING_BOTTOM;
                 item.height = Math.max(item.lineHeight,item.noteHeight);
             }
         }
     }
-    function _calcCrossSpan(obj,i,arr){
+    _calcCrossSpan(obj:any,i:number,arr:any){
         if(i<2)return 0;
         var preItem = obj.participant[i-1];
         var crossSpan =0;
@@ -468,10 +555,10 @@ var nutuml;
         }
         return crossSpan
     }
-    function _calcParticipantXY(obj){
+    _calcParticipantXY(obj:any){
         obj.innerHeight = 0;
         var len = obj.participant.length;
-        var arr = [];
+        var arr:any = [];
         var minWidth = 100;
         obj.maxParticipantHeight = 0;
         for(var j=0;j<obj.lines.length;j++){
@@ -510,7 +597,7 @@ var nutuml;
             if(arr[val2] !== undefined){
                 span = Math.max(span,arr[val2])
             }
-            var crossSpan = _calcCrossSpan(obj,i,arr);
+            var crossSpan = this._calcCrossSpan(obj,i,arr);
             span = Math.max(span,crossSpan);
             item.x = preItem.x + span;
             
@@ -530,7 +617,7 @@ var nutuml;
         }
         obj.width = Math.ceil(obj.participant[len-1].x + lastWidth + pagePadding) ; 
     }
-    function _calcLinesXY(obj){
+    _calcLinesXY(obj:any){
         var hisArr = [];
         var curY = pagePadding + obj.headerHeight + obj.boxHeight + obj.titleHeight + obj.maxParticipantHeight;
         var curGroupItem, lastGroupItem;
@@ -577,11 +664,11 @@ var nutuml;
             }else if(item.type == LINE_ELSE){
                 item.refItem = curGroupItem;
             }else if(item.type == LINE_ONLY_NOTE){
-                item.noteX = _calcOnlyNote(item,obj);
+                item.noteX = this._calcOnlyNote(item,obj);
                 minX = Math.min(minX,item.noteX);
                 maxX = Math.max(maxX,item.noteX+item.noteWidth+pagePadding);
             }else if(item.type == LINE_REF){
-                item.x = _calcRefX(item,obj);
+                item.x = this._calcRefX(item,obj);
                 item.toX = item.x + item.width;
                 item.toY = item.cornerY + item.height;
 
@@ -636,7 +723,7 @@ var nutuml;
             obj.width += obj.tranlateX
         }
     }
-    function _calcRefX(item,obj){
+    _calcRefX(item:any,obj:any){
         var fromParticipant, toParticipant;
         for(var k=0;k<obj.participant.length;k++){
             if(obj.participant[k].name == item.from){
@@ -657,7 +744,7 @@ var nutuml;
             return fromParticipant.lineX - 20;
         }
     }
-    function _calcOnlyNote(item,obj){
+     _calcOnlyNote(item:any,obj:any){
         var fromParticipant, toParticipant;
         for(var k=0;k<obj.participant.length;k++){
             if(obj.participant[k].name == item.noteItem.participant){
@@ -679,27 +766,25 @@ var nutuml;
             }
         }
     }
-    function _copyObj(obj){
+    _copyObj(obj:any){
         var copy = {};
-        for (var attr in obj) {
-            if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
-        }
+        Object.assign(copy,obj);
         return copy;
     }
-    function _delayLine(ctx,x,y,toX,toY,arr){
+    _delayLine(ctx:any,x:number,y:number,toX:number,toY:number,arr:any){
         var yPadding =10;
-        _realLine(ctx,x,y,toX,arr[0].from + yPadding)
+        this._realLine(ctx,x,y,toX,arr[0].from + yPadding)
         
         for(var i=0;i<arr.length;i++){
             if(i>=1){
-                _realLine(ctx,x,arr[i-1].to + yPadding,toX,arr[i].from + yPadding);
+                this._realLine(ctx,x,arr[i-1].to + yPadding,toX,arr[i].from + yPadding);
             }
-            _dotedLine(ctx,x,arr[i].from + yPadding ,toX,arr[i].to + yPadding);
+            this._dotedLine(ctx,x,arr[i].from + yPadding ,toX,arr[i].to + yPadding);
 
         }
-        _realLine(ctx,x,arr[arr.length-1].to + yPadding,toX,toY)
+        this._realLine(ctx,x,arr[arr.length-1].to + yPadding,toX,toY)
     }
-    function _dotedLine(ctx, x, y, toX, toY){
+    _dotedLine(ctx:any, x:number, y:number, toX:number, toY:number){
         ctx.save()
         ctx.beginPath()
         ctx.setLineDash([1,4])
@@ -709,7 +794,7 @@ var nutuml;
         ctx.fill()
         ctx.restore()
     }
-    function _dashedLine(ctx, x, y, toX, toY){
+    _dashedLine(ctx:any, x:number, y:number, toX:number, toY:number){
         ctx.save()
         ctx.beginPath()
         ctx.setLineDash([5,5])
@@ -719,7 +804,7 @@ var nutuml;
         ctx.fill()
         ctx.restore()
     }
-    function _realLine(ctx, x, y, toX, toY){
+    _realLine(ctx:any, x:number, y:number, toX:number, toY:number){
         ctx.save()
         ctx.beginPath()
         ctx.moveTo(x,y)
@@ -728,25 +813,25 @@ var nutuml;
         ctx.fill()
         ctx.restore()
     }
-    function _drawOneParticipant(ctx,item){
+    _drawOneParticipant(ctx:any,item:any){
         if(item.type=="actor"){
-            _drawActor(ctx,item);
+            this._drawActor(ctx,item);
         }else if(item.type=="boundary"){
-            _drawBoundary(ctx,item);
+            this._drawBoundary(ctx,item);
         }else if(item.type=="control"){
-            _drawControl(ctx,item);
+            this._drawControl(ctx,item);
         }else if(item.type=="entity"){
-            _drawEntity(ctx,item);
+            this._drawEntity(ctx,item);
         }else if(item.type=="database"){
-            _drawDatabase(ctx,item);
+            this._drawDatabase(ctx,item);
         }else if(item.type=="collections"){
-            _drawCollections(ctx,item);
+            this._drawCollections(ctx,item);
         }else{
-            _rectangle(ctx,item);
+            this._rectangle(ctx,item);
         }
     }
 
-    function _drawOneBox(ctx,item){
+    _drawOneBox(ctx:any,item:any){
         
         ctx.save()
         ctx.beginPath()
@@ -770,60 +855,61 @@ var nutuml;
         ctx.font= font;
         ctx.fillStyle = textFillStyle;
         
-        var mObj = _measureText(ctx,item.title);
+        var mObj = this._measureText(ctx,item.title,fontSize);
         var drawX = item.x + (item.width - mObj.width)/2
-        _onlyDrawText(ctx, drawX, item.y,item.title, fontSize,true);
+        this._onlyDrawText(ctx, drawX, item.y,item.title, fontSize,true);
         ctx.fill()
         ctx.restore()
     }
-    function _drawObj(ctx,obj){
+    _drawObj(ctx:any,obj:any){
         if(obj.titleHeight>0){
             ctx.font = TITLE_FONT;
-            var mObj = _measureText(ctx,obj.title,TITLE_SIZE);
+            var mObj = this._measureText(ctx,obj.title,TITLE_SIZE);
             var titleX = (obj.width-mObj.width)/2;
-            _drawTitleText(ctx,titleX, pagePadding+obj.headerHeight,obj.title,false);
+            this._drawTitleText(ctx,titleX, pagePadding+obj.headerHeight,obj.title);
         }
         if(obj.headerHeight>0){
             ctx.font = font;
-            var hObj = _measureText(ctx,obj.header);
+            var hObj = this._measureText(ctx,obj.header,fontSize);
 
             var headerX = obj.width - pagePadding - hObj.width;
-            _drawText(ctx,headerX, pagePadding,obj.header,false);
+            this._drawText(ctx,headerX, pagePadding,obj.header,false);
         }
         if(obj.footerHeight>0){
             ctx.font = font;
-            var fObj = _measureText(ctx,obj.footer);
+            var fObj = this._measureText(ctx,obj.footer,fontSize);
             var footerX = obj.width - pagePadding - fObj.width;
-            _drawText(ctx,footerX, obj.height-obj.footerHeight,obj.footer,false);
+            this._drawText(ctx,footerX, obj.height-obj.footerHeight,obj.footer,false);
         }
         if(obj.box.length>0){
            for(var i=0;i<obj.box.length;i++){
-               _drawOneBox(ctx,obj.box[i])
+               this._drawOneBox(ctx,obj.box[i])
            }
         }
     }
-    function _drawParticipant(ctx,obj){
+    _drawParticipant(ctx:any,obj:any){
         var len = obj.participant.length;
-        var delayArr = _patchDelay(obj);
+        var delayArr = this._patchDelay(obj);
         
         for(var i=0;i<len;i++){
             var item = obj.participant[i];
             if(item.name=="[" || item.name=="]")continue
-            _drawOneParticipant(ctx,item);
-            var bottom = _copyObj(item);
+            this._drawOneParticipant(ctx,item);
+            let bottom = new Participant();
+            Object.assign(bottom,item);
             bottom.y = item.y + obj.innerHeight + lineHeight + item.height;
             bottom.isBottom = true;
             if(!obj.hideFootbox){
-                _drawOneParticipant(ctx,bottom);
+                this._drawOneParticipant(ctx,bottom);
             }
             if(delayArr.length>0){
-                _delayLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y,delayArr);
+                this._delayLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y,delayArr);
             }else{
-                _dashedLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y);
+                this._dashedLine(ctx,item.lineX,item.lineY,item.lineX,bottom.y);
             }
         }
     }
-    function _patchDelay(obj){
+    _patchDelay(obj:any){
         var len = obj.lines.length;
         var arr = []
         for(var i=0;i<len;i++){
@@ -834,57 +920,57 @@ var nutuml;
         }
         return arr;
     }
-    function _drawRef(ctx,item){
+    _drawRef(ctx:any,item:any){
         
-        _groupRectangle(ctx,item)
+        this._groupRectangle(ctx,item)
     }
-    function _drawActive(ctx,obj){
+    _drawActive(ctx:any,obj:any){
         for(var i=0;i<obj.activeLines.length;i++){
-            _activeRectangle(ctx,obj.activeLines[i]);
+            this._activeRectangle(ctx,obj.activeLines[i]);
         }
     }
-    function _drawLines(ctx,obj){
+    _drawLines(ctx:any,obj:any){
         var len = obj.lines.length;
         for(var i=0;i<len;i++){
             var item = obj.lines[i];
             if(item.type==LINE_SEQUENCE){
-                _line(ctx,item,obj);
+                this._line(ctx,item,obj);
             }else if(item.type==LINE_SEPRATE){
-                _separateLine(ctx,item,obj)
+                this._separateLine(ctx,item,obj)
             }else if(item.type == LINE_ELSE){
-                _elseLine(ctx,item,obj)
+                this._elseLine(ctx,item,obj)
             }else if(item.type == LINE_ONLY_NOTE){
-                _noteRectangle(ctx,item)
+                this._noteRectangle(ctx,item)
             }else if(item.type == LINE_REF){
-                _drawRef(ctx,item)
+                this._drawRef(ctx,item)
             }else if(item.type == LINE_DELAY){
-                _drawDelay(ctx,item,obj.width)
+                this._drawDelay(ctx,item,obj.width)
             }
         }
     }
-    function _drawDelay(ctx,item,objWidth){
+    _drawDelay(ctx:any,item:any,objWidth:number){
         if(item.message.trim()==""){
             return;
         }
-        var mObj = _measureText(ctx,item.message,fontSize);
+        var mObj = this._measureText(ctx,item.message,fontSize);
         var x = (objWidth - mObj.width)/2 - NOTE_PADDING_LEFT;
-        _drawText(ctx,x,item.lineY+20, item.message);
+        this._drawText(ctx,x,item.lineY+20, item.message,false);
     }
-    function _drawGroupAlt(ctx,obj){
+    _drawGroupAlt(ctx:any,obj:any){
         var len = obj.lines.length;
         for(var i=0;i<len;i++){
             var item = obj.lines[i];
             if(item.type==LINE_ALT || item.type == LINE_GROUP){
-                _groupRectangle(ctx,item)
+                this._groupRectangle(ctx,item)
             }
         }
     }
-    function _separateLine(ctx,item,obj){
+    _separateLine(ctx:any,item:any,obj:any){
         ctx.save(); 
         ctx.beginPath(); 
         var midY = item.y -item.height /2 + paddingHeight;
         var boxX = obj.width/2 - item.width/2;
-        var textObj = _measureText(ctx,item.message);
+        var textObj = this._measureText(ctx,item.message,fontSize);
         var boxY = midY - textObj.height/2;
         var boxHeight = textObj.height;
 
@@ -921,10 +1007,10 @@ var nutuml;
         ctx.stroke(); 
         ctx.restore(); 
 
-        _drawText(ctx,boxX+paddingWidth,boxY-2, item.message);
+        this._drawText(ctx,boxX+paddingWidth,boxY-2, item.message,false);
 
     }
-    function _drawToSelf(ctx,x,y){
+     _drawToSelf(ctx:any,x:number,y:number){
         ctx.save(); 
         ctx.beginPath(); 
         ctx.moveTo(x, y); 
@@ -934,17 +1020,17 @@ var nutuml;
         ctx.lineTo(x, y+13); 
         ctx.stroke(); 
         ctx.restore(); 
-        _drawArrow(ctx,x,y+13,true);
+        this._drawArrow(ctx,x,y+13,true);
 
     }
-    function _elseLine(ctx,item,obj){
+    _elseLine(ctx:any,item:any,obj:any){
         var message = "["+ item.message + "]";
-        var textObj = _measureText(ctx,item.message);
-        _drawGroupText(ctx,Math.min(item.refItem.x,item.refItem.toX) + 10,item.y-textObj.height, message);
+        var textObj = this._measureText(ctx,item.message,fontSize);
+        this._drawGroupText(ctx,Math.min(item.refItem.x,item.refItem.toX) + 10,item.y-textObj.height, message,false);
         var lineY = item.cornerY + 7
-        _dashedLine(ctx,item.refItem.x, lineY, item.refItem.toX, lineY);
+        this._dashedLine(ctx,item.refItem.x, lineY, item.refItem.toX, lineY);
     }
-    function _line(ctx,item,obj){
+     _line(ctx:any,item:any,obj:any){
       /*
         ctx.save(); 
         ctx.fillStyle = FILL_RED;
@@ -952,28 +1038,28 @@ var nutuml;
         ctx.restore();
     */
         if(item.noteItem != undefined){
-            _noteRectangle(ctx,item)
+            this._noteRectangle(ctx,item)
         }
         var message = item.message;
         if(obj.autonumber){
             message = item.number + " " + message;
         }
-        var textObj = _measureText(ctx,item.message);
+        var textObj = this._measureText(ctx,item.message,fontSize);
         if(item.from==item.to){
-            _drawText(ctx,Math.min(item.x,item.toX) + 10,item.lineY+paddingHeight, message);
-            _drawToSelf(ctx,item.x,item.lineY+item.lineHeight-toSelfHeight)
+            this._drawText(ctx,Math.min(item.x,item.toX) + 10,item.lineY+paddingHeight, message,false);
+            this._drawToSelf(ctx,item.x,item.lineY+item.lineHeight-toSelfHeight)
             return;
         }else{
-            _drawText(ctx,Math.min(item.x,item.toX) + 10,item.lineY+paddingHeight, message);
+            this._drawText(ctx,Math.min(item.x,item.toX) + 10,item.lineY+paddingHeight, message);
         }
-        if(dashOperators.includes(item.operator)){
-            _dashedLine(ctx,item.x, item.lineY+item.lineHeight, item.toX, item.lineY+item.lineHeight);
+        if(dashOperators.indexOf(item.operator)!==-1){
+            this._dashedLine(ctx,item.x, item.lineY+item.lineHeight, item.toX, item.lineY+item.lineHeight);
         }else{
-            _realLine(ctx,item.x, item.lineY+item.lineHeight, item.toX, item.lineY+item.lineHeight);
+            this._realLine(ctx,item.x, item.lineY+item.lineHeight, item.toX, item.lineY+item.lineHeight);
         }
-        _drawArrow(ctx,item.toX,item.lineY+item.lineHeight,item.x>item.toX);
+        this._drawArrow(ctx,item.toX,item.lineY+item.lineHeight,item.x>item.toX);
     }
-    function _drawArrow(ctx, x,y,reverse) { 
+    _drawArrow(ctx:any, x:number,y:number,reverse:boolean) { 
         var xDelta =-12;
         var xDelta2 =-7;
         var yDelta =-5;
@@ -995,14 +1081,14 @@ var nutuml;
         ctx.fill();
         ctx.restore(); 
     }
-    function _drawDatabase(ctx,item){
+    _drawDatabase(ctx:any,item:any){
         var x = item.x;
         var y = item.y;
         if(item.isBottom){
             y+=fontSize+paddingHeight;
         }
-        var picWidth = iPar["database"].width;
-        var picHeight = iPar["database"].height;
+        var picWidth =  this.iPar.get("database").width;
+        var picHeight = this.iPar.get("database").height;
         if(item.width>picWidth){
             x = item.x + (item.width-picWidth)/2;
         }
@@ -1062,14 +1148,14 @@ var nutuml;
         ctx.stroke()
         ctx.restore()
     }
-    function _drawEntity(ctx,item){
+    _drawEntity(ctx:any,item:any){
         var x = item.x;
         var y = item.y;
         if(item.isBottom){
             y+=fontSize+paddingHeight;
         }
-        var picWidth = iPar["entity"].width;
-        var picHeight = iPar["entity"].height;
+        var picWidth = this.iPar.get("entity").width;
+        var picHeight = this.iPar.get("entity").height;
         if(item.width>picWidth){
             x = item.x + (item.width-picWidth)/2;
         }
@@ -1121,14 +1207,14 @@ var nutuml;
         ctx.restore()
     }
 
-    function _drawControl(ctx,item){
+    _drawControl(ctx:any,item:any){
         var x = item.x;
         var y = item.y;
         if(item.isBottom){
             y+=fontSize+paddingHeight;
         }
-        var picWidth = iPar["control"].width;
-        var picHeight = iPar["control"].height;
+        var picWidth = this.iPar.get("control").width;
+        var picHeight = this.iPar.get("control").height;
         if(item.width>picWidth){
             x = item.x + (item.width-picWidth)/2;
         }
@@ -1183,14 +1269,14 @@ var nutuml;
         ctx.restore()
     }
     
-    function _drawBoundary(ctx,item){
+    _drawBoundary(ctx:any,item:any){
         var x = item.x+1;
         var y = item.y;
         if(item.isBottom){
             y+=fontSize+paddingHeight;
         }
-        var picWidth = iPar["boundary"].width;
-        var picHeight = iPar["boundary"].height;
+        var picWidth = this.iPar.get("boundary").width;
+        var picHeight = this.iPar.get("boundary").height;
         if(item.width>picWidth){
             x = item.x + (item.width-picWidth)/2;
         }
@@ -1243,14 +1329,14 @@ var nutuml;
         ctx.stroke()
         ctx.restore()
     }
-    function _drawActor(ctx,item){
+    _drawActor(ctx:any,item:any){
         var x = item.x+2;
         var y = item.y;
         if(item.isBottom){
             y+=fontSize+paddingHeight;
         }
-        var picWidth = iPar["actor"].width;
-        var picHeight = iPar["actor"].height;
+        var picWidth = this.iPar.get("actor").width;
+        var picHeight = this.iPar.get("actor").height;
 
         if(item.width>picWidth){
             x = item.x + (item.width-picWidth)/2;
@@ -1291,46 +1377,37 @@ var nutuml;
         ctx.stroke()
         ctx.restore()
     }
-    function _measureText(ctx,title,fontHeight){
-        fontHeight = fontHeight || fontSize;
-        var obj = { width: 0, height: 0};
-        var arr = title.split("\n");
-        arr.forEach(function(item){
-            obj.width = Math.max(obj.width,ctx.measureText(item).width)
-        })
-        obj.height = arr.length * (fontHeight+paddingHeight) + paddingHeight;
-        return obj;
-    }
-    function _drawGroupText(ctx,x,y,title,center){
+    
+    _drawGroupText(ctx:any,x:number,y:number,title:string,center:boolean){
         ctx.save()
         ctx.font= GROUP_TEXT_FONE
         ctx.fillStyle = textFillStyle;
-        _onlyDrawText(ctx, x, y,title, fontSize,center);
+        this._onlyDrawText(ctx, x, y,title, fontSize,center);
         ctx.fill()
         ctx.restore()
     }
-    function _drawText(ctx,x,y,title,center){
+    _drawText(ctx:any,x:number,y:number,title:string,center?:boolean){
         ctx.save()
         ctx.font= font;
         ctx.fillStyle = textFillStyle;
-        _onlyDrawText(ctx, x, y,title, fontSize,center);
+        this._onlyDrawText(ctx, x, y,title, fontSize,center);
         ctx.fill()
         ctx.restore()
     }
-    function _drawTitleText(ctx,x,y,title){
+     _drawTitleText(ctx:any,x:number,y:number,title:string){
         ctx.save()
         ctx.font= TITLE_FONT;
         ctx.fillStyle = textFillStyle;
-        _onlyDrawText(ctx, x, y,title, fontSize);
+        this._onlyDrawText(ctx, x, y,title, fontSize,true);
         ctx.fill()
         ctx.restore()
     }
-    function _onlyDrawText(ctx, x, y,title, size,center) {
+     _onlyDrawText(ctx:any, x:number, y:number,title:string, size:number,center:boolean) {
         var fSize = size || fontSize;
         var arr = title.split("\n");
         var obj = null;
         if (center) {
-            obj = _measureText(ctx, title);
+            obj = this._measureText(ctx, title,fSize);
         }
         for (var i = 0; i < arr.length; i++) {
             var lineX = x;
@@ -1341,7 +1418,7 @@ var nutuml;
             ctx.fillText(arr[i], lineX, fSize + lineY + paddingHeight - 1);
         }
     }
-    function _getLineItem(lineType,message,typeName){
+    _getLineItem(lineType:any,message:string,typeName:any):Line{
         return {
             from:"",
             to: "",
@@ -1353,7 +1430,7 @@ var nutuml;
             active:[]
         }
     }
-    function isIntNum(val){
+    isIntNum(val:any){
         var regPos = /^\d+$/; 
         if(regPos.test(val)){
             return true;
@@ -1361,21 +1438,21 @@ var nutuml;
             return false;
         } 
     }
-    function _parseSkinparam(tokens,obj,cur){
+    _parseSkinparam(tokens:any,obj:any,cur:number){
        var len = tokens.length;
         // handle below case:
         // skinparam maxMessageSize 50
        if(cur+1<len){
           var nameItem = tokens[cur]
           var valueItem = tokens[cur+1]
-          if("maxMessageSize" == nameItem.value && isIntNum(valueItem.value)){
+          if("maxMessageSize" == nameItem.value && this.isIntNum(valueItem.value)){
              obj.maxMessageSize = valueItem.value
              cur +=2
           }
        } 
        return cur
     }
-    function _parseRef(tokens,obj,cur){
+    _parseRef(tokens:any,obj:any,cur:number){
         var len = tokens.length;
 
         /* handle below case:
@@ -1391,7 +1468,7 @@ var nutuml;
                 && tokens[cur+2].type == TYPE_COMMA && refTo.type==TYPE_WORD
                 && tokens[cur+4].value == ":" && refMessage.type ==TYPE_MESSAGE
             ){
-                    var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                    var lineObj = this._getLineItem(LINE_REF,refMessage.value,"REF")
                     lineObj.from = refFrom.value;
                     lineObj.to = refTo.value;
                     obj.lines.push(lineObj)
@@ -1408,7 +1485,7 @@ var nutuml;
             if("over"==tokens[cur].value && refFrom.type==TYPE_WORD
             && tokens[cur+2].value == ":" && refMessage.type ==TYPE_MESSAGE
             ){
-                var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                var lineObj = this._getLineItem(LINE_REF,refMessage.value,"REF")
                 lineObj.from = refFrom.value;
                 obj.lines.push(lineObj)
                 return cur+4
@@ -1429,7 +1506,7 @@ var nutuml;
              && refMessage.type ==TYPE_MESSAGE && tokens[cur+3].value=="end"
              && tokens[cur+4].value=="ref"
             ){
-                var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                var lineObj = this._getLineItem(LINE_REF,refMessage.value,"REF")
                 lineObj.from = refFrom.value;
                 obj.lines.push(lineObj)
                 return cur+5
@@ -1452,7 +1529,7 @@ var nutuml;
              && refMessage.type ==TYPE_MESSAGE && tokens[cur+5].value=="end"
              && tokens[cur+6].value=="ref"
             ){
-                var lineObj = _getLineItem(LINE_REF,refMessage.value,"REF")
+                var lineObj = this._getLineItem(LINE_REF,refMessage.value,"REF")
                 lineObj.from = refFrom.value;
                 lineObj.to = refTo.value;
                 obj.lines.push(lineObj)
@@ -1460,20 +1537,20 @@ var nutuml;
             }
         }
     }
-    function isActive(val){
-        return activeWords.includes(val);
+    isActive(val:any){
+        return activeWords.indexOf(val)!==-1;
     }
-    function isColor(val){
+    isColor(val:any){
         if(val===undefined){
             return false
         }
         return val[0]==='#';
     }
-    function handleActive(obj,token,cur,val){
+    handleActive(obj:any,token:any,cur:number,val:any){
 
         var item = token[cur++];
         var colorWord = token[cur];
-        if(colorWord!== undefined &&  isColor(colorWord.value)){
+        if(colorWord!== undefined &&  this.isColor(colorWord.value)){
             if(obj.lines.length>0){
                 obj.lines[obj.lines.length-1].active.push({
                     "type":val,
@@ -1497,8 +1574,8 @@ var nutuml;
         }
         return cur;
     }
-    function _getObj(tokens){
-        var obj = {
+    _getObj(tokens:any){
+        let obj:SequenceObj = {
             participant : [],
             box : [],
             lines : [],
@@ -1526,11 +1603,11 @@ var nutuml;
             var item = tokens[cur++];
             if(item.type==TYPE_RESERVED){
                 if("ref"==item.value){
-                    cur = _parseRef(tokens,obj,cur)
+                    cur = this._parseRef(tokens,obj,cur)
                     continue;
                 }
                 if("skinparam"==item.value){
-                    cur = _parseSkinparam(tokens,obj,cur)
+                    cur = this._parseSkinparam(tokens,obj,cur)
                     continue;
                 }
                 if("box"==item.value){
@@ -1617,14 +1694,14 @@ var nutuml;
                          && "of" == noteOf.value && noteWord.type == TYPE_WORD
                          && noteMessage.type == TYPE_MESSAGE 
                          && tokens[cur+5].value=='end' && tokens[cur+6].value=='note'){
-                            var noteItem = {
-                                "direction": noteDir.value,
-                                "message": noteMessage.value,
-                                "color": noteColor.value,
-                                "participant": noteWord.value
+                            let noteItem:NoteItem = {
+                                direction: noteDir.value,
+                                message: noteMessage.value,
+                                color: noteColor.value,
+                                participant: noteWord.value
                             }
                             cur = cur+7;
-                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            var lineObj = this._getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
                             lineObj.noteItem = noteItem;
                             obj.lines.push(lineObj)
                             continue;
@@ -1643,13 +1720,13 @@ var nutuml;
                          && "of" == noteOf.value && noteWord.type == TYPE_WORD
                          && noteSeprator.type == TYPE_SEPARATORS
                          && noteMessage.type == TYPE_MESSAGE ){
-                            var noteItem = {
+                            let noteItem:NoteItem = {
                                 "direction": noteDir.value,
                                 "message": noteMessage.value,
                                 "participant": noteWord.value
                             }
                             cur = cur+5;
-                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            var lineObj = this._getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
                             lineObj.noteItem = noteItem;
                             obj.lines.push(lineObj)
                             continue;
@@ -1666,13 +1743,13 @@ var nutuml;
                         if( "over" == noteOver.value && noteWord.type == TYPE_WORD
                          && noteSeprator.type == TYPE_SEPARATORS
                          && noteMessage.type == TYPE_MESSAGE ){
-                            var noteItem = {
+                            let noteItem:NoteItem = {
                                 "direction": noteOver.value,
                                 "message": noteMessage.value,
                                 "participant": noteWord.value
                             }
                             cur = cur+4;
-                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            var lineObj = this._getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
                             lineObj.noteItem = noteItem;
                             obj.lines.push(lineObj)
                             continue;
@@ -1693,7 +1770,7 @@ var nutuml;
                          && noteComma.type == TYPE_COMMA && noteWordTo.type == TYPE_WORD
                          && noteSeprator.type == TYPE_SEPARATORS
                          && noteMessage.type == TYPE_MESSAGE ){
-                            var noteItem = {
+                            let noteItem:NoteItem = {
                                 "direction": noteOver.value,
                                 "message": noteMessage.value,
                                 "participant": noteWord.value,
@@ -1701,7 +1778,7 @@ var nutuml;
                                 "participantTo": noteWordTo.value
                             }
                             cur = cur+7;
-                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            var lineObj = this._getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
                             lineObj.noteItem = noteItem;
                             obj.lines.push(lineObj)
                             continue;
@@ -1725,14 +1802,14 @@ var nutuml;
                          && noteComma.type == TYPE_COMMA && noteWordTo.type == TYPE_WORD
                          && noteMessage.type == TYPE_MESSAGE 
                          && tokens[cur+5].value == "end" && tokens[cur+6].value== "note"){
-                            var noteItem = {
+                            let noteItem:NoteItem = {
                                 "direction": noteOver.value,
                                 "message": noteMessage.value,
                                 "participant": noteWord.value,
                                 "participantTo": noteWordTo.value
                             }
                             cur = cur+7;
-                            var lineObj = _getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
+                            var lineObj = this._getLineItem(LINE_ONLY_NOTE,"","ONLY_NOTE")
                             lineObj.noteItem = noteItem;
                             obj.lines.push(lineObj)
                             continue;
@@ -1749,8 +1826,8 @@ var nutuml;
                         obj.title = opItem.value;
                     }
                 }
-                if(isActive(item.value)){
-                    cur = handleActive(obj,tokens,cur,item.value)
+                if(this.isActive(item.value)){
+                    cur = this.handleActive(obj,tokens,cur,item.value)
                     continue;
                 }
                 if("header"==item.value){
@@ -1782,7 +1859,7 @@ var nutuml;
                             cur++;
                         }
                     }
-                    obj.lines.push(_getLineItem(LINE_ALT,message,item.value));
+                    obj.lines.push(this._getLineItem(LINE_ALT,message,item.value));
                     continue
                 }
                 if("else"==item.value){
@@ -1794,13 +1871,13 @@ var nutuml;
                             cur++;
                         }
                     }
-                    obj.lines.push(_getLineItem(LINE_ELSE,message,item.value));
+                    obj.lines.push(this._getLineItem(LINE_ELSE,message,item.value));
                     continue
                 }
                 if("end"==item.value){
                     // handle end box
                     if(cur>=len){
-                        obj.lines.push(_getLineItem(LINE_END,"",item.value));
+                        obj.lines.push(this._getLineItem(LINE_END,"",item.value));
                         continue
                     }
                     var nextItem = tokens[cur]
@@ -1809,10 +1886,10 @@ var nutuml;
                         cur++
                         continue
                     }
-                    obj.lines.push(_getLineItem(LINE_END,"",item.value));
+                    obj.lines.push(this._getLineItem(LINE_END,"",item.value));
                     continue
                 }
-                if(groupWords.includes(item.value)){
+                if(groupWords.indexOf(item.value)!==-1){
                     var message = "";
                     if(cur<len){
                         var nextItem = tokens[cur];
@@ -1821,10 +1898,10 @@ var nutuml;
                             cur++;
                         }
                     }
-                    obj.lines.push(_getLineItem(LINE_GROUP,message,item.value));
+                    obj.lines.push(this._getLineItem(LINE_GROUP,message,item.value));
                     continue
                 }
-                if(participantWords.includes(item.value)){
+                if(participantWords.indexOf(item.value)!==-1){
                     var opItem = tokens[cur++];
                     if(cur+1<len){
                         var asItem = tokens[cur];
@@ -1839,7 +1916,7 @@ var nutuml;
                                 type:item.value 
                             });
                             participantArr.push(opItem.value);
-                            setBox(obj,inBox,opItem.value)
+                            this.setBox(obj,inBox,opItem.value)
                             cur +=2
                             continue
                         }else if(opItem.type == TYPE_STRING && asItem.value=="as" && valItem.type == TYPE_WORD){
@@ -1851,7 +1928,7 @@ var nutuml;
                                 type:item.value 
                             });
                             participantArr.push(valItem.value);
-                            setBox(obj,inBox,valItem.value)
+                            this.setBox(obj,inBox,valItem.value)
                             cur +=2
                             continue
                         }
@@ -1866,20 +1943,20 @@ var nutuml;
                             type:item.value 
                         });
                         participantArr.push(opItem.value);
-                        setBox(obj,inBox,opItem.value)
+                        this.setBox(obj,inBox,opItem.value)
                         continue
                     }
                 }
             }
             if(item.type==TYPE_DELAY){
-                obj.lines.push(_getLineItem(LINE_DELAY,item.value,"DELAY"));
+                obj.lines.push(this._getLineItem(LINE_DELAY,item.value,"DELAY"));
                 continue
             }else if(item.type==TYPE_SPACE){
-                obj.lines.push(_getLineItem(LINE_SPACE,item.value,"SPACE"));
+                obj.lines.push(this._getLineItem(LINE_SPACE,item.value,"SPACE"));
                 continue
             }
             if(item.type==TYPE_WORD || item.type==TYPE_STRING|| item.type==TYPE_SEPARATE_LINE){
-                var lineItem = _getLineItem(LINE_SEQUENCE,"","SEQUENCE");
+                var lineItem = this._getLineItem(LINE_SEQUENCE,"","SEQUENCE");
                 
                 if(item.type==TYPE_SEPARATE_LINE){
                     lineItem.type = LINE_SEPRATE
@@ -1888,7 +1965,7 @@ var nutuml;
                     continue
                 }
                 
-                if(!participantArr.includes(item.value)){
+                if(participantArr.indexOf(item.value)==-1){
                     obj.participant.push({
                         name: item.value,
                         title: item.value,
@@ -1939,11 +2016,11 @@ var nutuml;
                         }
                     }
                 }
-                if(!participantArr.includes(toParticipant.name)){
+                if(participantArr.indexOf(toParticipant.name)==-1){
                     obj.participant.push(toParticipant);
                     participantArr.push(toParticipant.name);
                 }
-                if(fromOperators.includes(opItem.value)){
+                if(fromOperators.indexOf(opItem.value)!==-1){
                     lineItem.from = item.value;
                     lineItem.to = toParticipant.name;
                 }else{
@@ -1954,10 +2031,10 @@ var nutuml;
                 obj.lines.push(lineItem);
             }
         }
-        sortParticipant(obj);
+        this.sortParticipant(obj);
         return obj;
     }
-    function wordwrap(ctx,text,maxWidth){
+    wordwrap(ctx:any,text:string,maxWidth:number){
         var arr = text.split("\n");
         var lines = [];
         for (var i = 0; i < arr.length; i++) {
@@ -2013,18 +2090,18 @@ var nutuml;
         }
         return lines.join('\n');
     }
-    function handleMaxMessage(ctx,obj){
+    handleMaxMessage(ctx:any,obj:any){
         ctx.save()
         ctx.font= font;
         ctx.fillStyle = textFillStyle;
         if(obj.maxMessageSize<=0)return;
         for(var i=0;i<obj.lines.length;i++){
             var item = obj.lines[i];
-            item.message = wordwrap(ctx,item.message,obj.maxMessageSize);
+            item.message = this.wordwrap(ctx,item.message,obj.maxMessageSize);
         } 
         ctx.restore()
     }
-    function sortParticipant(obj){
+    sortParticipant(obj:any){
         var arr = [];
         var head = null;
         var tail = null;
@@ -2046,7 +2123,7 @@ var nutuml;
         }
         obj.participant=arr;
     }
-    function setBox(obj,inBox,val){
+    setBox(obj:any,inBox:boolean,val:any){
        if(inBox){
           var box = obj.box[obj.box.length-1];
           if( box.start==null){
@@ -2055,7 +2132,7 @@ var nutuml;
          box.end=val
        }
     }
-    function _getParByName(obj,name){
+     _getParByName(obj:SequenceObj,name:string){
         for(var i=0;i<obj.participant.length;i++){
             if(name== obj.participant[i].name){
                 return obj.participant[i];
@@ -2063,7 +2140,7 @@ var nutuml;
         }
         return undefined;
     }
-    function _patchLine(line,doc){
+     _patchLine(line:Line,doc:any){
         var fromArr = doc[line.from];
         var toArr = doc[line.to];
 
@@ -2094,10 +2171,10 @@ var nutuml;
         }
     }
 
-    function _calcActiveOne(line,doc,j,obj){
+    _calcActiveOne(line:Line,doc:any,j:number,obj:SequenceObj){
         var item = line.active[j];
         var arr = doc[item.participant];
-        var par = _getParByName(obj,item.participant);
+        var par = this._getParByName(obj,item.participant);
         if(par===undefined){
             console.log("undefined" + item.participant)
             return;
@@ -2112,9 +2189,9 @@ var nutuml;
                 var lineX = arr[arr.length-1].x + ACTIVE_WIDTH/2
                 arr.push({x:lineX,topY:y})
             }
-            _patchLine(line,doc)
+            this._patchLine(line,doc)
         }else{
-            _patchLine(line,doc)
+            this._patchLine(line,doc)
 
             var one = arr.pop();
             if(one === undefined){
@@ -2126,25 +2203,25 @@ var nutuml;
             return one;
         }
     }
-    function _calcActiveLines(obj){
-        var doc = [];
+    _calcActiveLines(obj:SequenceObj){
+        let doc = new Array();
         for(var i=0;i<obj.lines.length;i++){
             var line = obj.lines[i];
             if(line.active.length>0){
                 for(var j=0;j<line.active.length;j++){
-                    var one= _calcActiveOne(line,doc,j,obj)
+                    var one= this._calcActiveOne(line,doc,j,obj)
                     if(one !== undefined){
                         obj.activeLines.push(one);
                     }
                 }
             }else{
-                _patchLine(line,doc)
+                this._patchLine(line,doc)
             }
         }
         obj.activeLines.reverse();
     }
     
-    function _calcBoxXY(secObj){
+    _calcBoxXY(secObj:SequenceObj){
        if(secObj.box.length==0)
           return
 
@@ -2172,24 +2249,9 @@ var nutuml;
            item.height=secObj.height-secObj.titleHeight-secObj.headerHeight-secObj.footerHeight-pagePadding; 
        } 
     }
-    NutUml = function (el) {
-        this.el = el;
-        el.innerHTML="";
-        var canvas = document.createElement("canvas");
-        this.context = canvas.getContext("2d");
-        var img = document.createElement("img");
-        var message = document.createElement("div");
-        message.style = "background-color: #fcf8e3;";
-        el.appendChild(message);
-        el.appendChild(img);
-        this.img = img;
-        this.message = message;
-        this.canvas = canvas;
-        this.tokens = [];
-        this.debug = false;
-    };
 
-    NutUml.prototype.drawUml = function(text){
+
+    drawUml(text:string){
         var ana = this.analysis(text);
         if(this.debug){
             console.log(ana)
@@ -2199,52 +2261,56 @@ var nutuml;
         }else{
             return ana;
         }
-        var secObj = _getObj(this.tokens);
+        var secObj = this._getObj(this.tokens);
         if(this.debug){
             console.log(secObj)
         }
         if(secObj.error !==undefined){
             console.log("error" + JSON.stringify(secObj.error))
             this.message.innerText = "Syntax error near \"" + secObj.error.value + "\" at line " + secObj.error.line
-            this.message.style = "background-color: #fcf8e3; padding:15px; font-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif; font-size: 14px; line-height: 1.42857143; color: #333;";
+            this.message.style.setProperty("background-color","#fcf8e3");
+            this.message.style.setProperty("padding","15px");
+            this.message.style.setProperty("font-family","\"Helvetica Neue\",Helvetica,Arial,sans-serif");
+            this.message.style.setProperty("font-size","14px");
+            this.message.style.setProperty("line-height","1.42857143");
+            this.message.style.setProperty("color","#333");
             return ""; 
         }else{
             this.message.innerText = "";
-            this.message.style = "";
         }
 
         var ctx= this.context;
         ctx.lineWidth=1;
         
-        handleMaxMessage(ctx,secObj);
-        _calcObjSize(ctx,secObj);
-        _calcParticipantSize(ctx,secObj.participant);
-        _calcLineSize(ctx,secObj);
-        _calcParticipantXY(secObj);
-        _calcLinesXY(secObj);
-        _calcActiveLines(secObj);
-        _calcBoxXY(secObj);
+        this.handleMaxMessage(ctx,secObj);
+        this._calcObjSize(ctx,secObj);
+        this._calcParticipantSize(ctx,secObj.participant);
+        this._calcLineSize(ctx,secObj);
+        this._calcParticipantXY(secObj);
+        this._calcLinesXY(secObj);
+        this._calcActiveLines(secObj);
+        this._calcBoxXY(secObj);
 
         this.canvas.width = secObj.width;
         this.canvas.height = secObj.height;
 
         ctx.translate(0.5,0.5);
-        _drawObj(ctx,secObj);
+        this._drawObj(ctx,secObj);
         if(secObj.tranlateX!=undefined){
             ctx.translate(secObj.tranlateX,0.5);
         }
-        _drawParticipant(ctx,secObj);
-        _drawGroupAlt(ctx,secObj);
-        _drawActive(ctx,secObj);
-        _drawLines(ctx,secObj);
+        this._drawParticipant(ctx,secObj);
+        this._drawGroupAlt(ctx,secObj);
+        this._drawActive(ctx,secObj);
+        this._drawLines(ctx,secObj);
         this.img.src=this.canvas.toDataURL();
         return "";
-    };
-    NutUml.prototype.render = function(text){
+    }
+    render(text:string){
         this.drawUml(text);
         return "<img src='" + this.canvas.toDataURL() + "' />";
-    };
-    function isWordChar(c){
+    }
+    isWordChar(c:string){
         var result = /[a-z0-9]/i.test(c);
         if(result){
             return result;
@@ -2254,7 +2320,7 @@ var nutuml;
         }
         return c.charCodeAt(0)>255;
     }
-    NutUml.prototype.analysis = function(str) {
+    analysis(str: string) {
         /**
          * current用于标识当前字符位置,
          * str[cur]即为当前字符
@@ -2268,7 +2334,7 @@ var nutuml;
         var multiLine = false;
         var curLine =1;
         while(cur < str.length) {
-            if(newLines.includes(str[cur]) && multiLineFlag ==true){
+            if(newLines.indexOf(str[cur])!==-1 && multiLineFlag ==true){
                 multiLine = true
                 curLine++
                 multiLineFlag = false
@@ -2281,11 +2347,11 @@ var nutuml;
                 var multiStart = curLine;
                 while(cur < str.length){
                     if(lineStart){
-                        if(isWordChar(str[cur])) { // 读单词
+                        if(this.isWordChar(str[cur])) { // 读单词
                             let word = "" + str[cur++];
                             // 测试下一位字符,如果不是字母直接进入下一次循环(此时cur已经右移)
                             // 如果是则继续读字母,并将cur向右移动
-                            while(cur < str.length && isWordChar(str[cur])) {
+                            while(cur < str.length && this.isWordChar(str[cur])) {
                                 // cur < str.length防止越界
                                 word += str[cur++];
                             }
@@ -2293,7 +2359,7 @@ var nutuml;
                                 multiLine = false;
                                 tokens.push({
                                     type: TYPE_MESSAGE,
-                                    value: message.trimEnd(),
+                                    value: message.trim(),
                                     line: multiStart 
                                 });
                                 tokens.push({
@@ -2310,7 +2376,7 @@ var nutuml;
                             message += str[cur++]
                         }
                     }else{
-                        if(newLines.includes(str[cur])){
+                        if(newLines.indexOf(str[cur])!==-1){
                             lineStart = true;
                             curLine++
                         }
@@ -2324,32 +2390,32 @@ var nutuml;
                    curLine++;
                 }
                 cur++;
-            } else if(isWordChar(str[cur])) { // 读单词
+            } else if(this.isWordChar(str[cur])) { // 读单词
                 
                 let word = "" + str[cur++];
                 // 测试下一位字符,如果不是字母直接进入下一次循环(此时cur已经右移)
                 // 如果是则继续读字母,并将cur向右移动
-                while(cur < str.length && isWordChar(str[cur])) {
+                while(cur < str.length && this.isWordChar(str[cur])) {
                     // cur < str.length防止越界
                     word += str[cur++];
                 }
-                if(reservedWords.includes(word)) {
+                if(reservedWords.indexOf(word)!==-1) {
                     tokens.push({
                         type: TYPE_RESERVED,
                         value: word,
                         line: curLine
                     }); // 存储保留字(关键字)
-                    if(multiLineWords.includes(word)){
+                    if(multiLineWords.indexOf(word)!==-1){
                         if(tokens.length<2 || tokens[tokens.length-2].value!="end"){
                             multiLineFlag = true;
                         }
                     }
-                    if(oneLineWords.includes(word)){
-                        while(cur<str.length && /\s/.test(str[cur]) && !newLines.includes(str[cur])){
+                    if(oneLineWords.indexOf(word)!==-1){
+                        while(cur<str.length && /\s/.test(str[cur]) && newLines.indexOf(str[cur])==-1){
                             cur++;
                         }
                         var tempWord = "";
-                        while(cur < str.length && !newLines.includes(str[cur])) {
+                        while(cur < str.length && newLines.indexOf(str[cur])==-1) {
                             tempWord += str[cur++];
                             multiLineFlag = false;
                         }
@@ -2366,7 +2432,7 @@ var nutuml;
                         line: curLine
                     }); // 存储普通单词                            
                 }
-            } else if(separators.includes(str[cur])) {
+            } else if(separators.indexOf(str[cur])!==-1) {
                 multiLineFlag = false
                 tokens.push({
                     type: TYPE_SEPARATORS,
@@ -2381,7 +2447,7 @@ var nutuml;
 
                 // 测试下一位字符,如果是换行进入下一次循环
                 // 如果不是则继续读字符,并将cur向右移动
-                while(cur < str.length && !newLines.includes(str[cur])) {
+                while(cur < str.length && newLines.indexOf(str[cur])==-1) {
                     word += str[cur++];
                 }
                 word = word.replace(/\\n/g,"\n")
@@ -2443,9 +2509,9 @@ var nutuml;
                     value: message,
                     line: curLine
                 }); // 存储分隔符并将cur向右移动
-            } else if(operators.includes(str[cur])) {
+            } else if(operators.indexOf(str[cur])!==-1) {
                 let operator = "" + str[cur++];
-                while(cur < str.length && operators.includes(str[cur])) {
+                while(cur < str.length && operators.indexOf(str[cur])!==-1) {
                     operator += str[cur++];
                 }
                 tokens.push({
@@ -2489,16 +2555,11 @@ var nutuml;
                     return "syntax error"
                 }
             }else {
-                return "syntax error：" + str[cur];
+                return "syntax error:" + str[cur];
             }
 
         }
         this.tokens = tokens;
         return tokens;
-    };
-    nutuml = new NutUml(document.createElement("div"));
-
-})()
-if (typeof module !== 'undefined' && typeof exports === 'object') {
-    module.exports = NutUml;
+    }
 }

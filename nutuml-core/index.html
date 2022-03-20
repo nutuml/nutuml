@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Getting Started！</title>
+  </head>
+  <body>
+    <BR><BR><BR><BR>
+    <script src="bundle.js"></script>
+    <div id="test"></div>
+    <script>
+    var text = `# Root
+## AA
+## BB
+## CC
+`
+      document.getElementById("test").innerHTML = nutuml.render(text);
+    </script>
+
+<BR><BR><BR><BR><BR><BR>
+Root
+## sub1
+### 11试试888888
+### 12
+#### 88888
+#### 88888
+## sub2
+### 11试试888888
+### 12
+#### 88888
+#### 88888
+
+### 21
+#### 211
+##### 2111来了
+##### 2112
+#### 212
+## sub3
+### 31
+#### 311
+##### 3111
+##### 3112
+##### 3113
+#### 312
+## sub4
+## sub5  
+## sub6    
+## sub7    
+## sub8    
+## sub9    
+## sub10    
+   ## sub4    
+   ## sub4    
+   ## sub4    
+   ## sub4    
+   ## sub4    
+   ## sub4    
+   ## sub4 
+  </body>
+</html>
