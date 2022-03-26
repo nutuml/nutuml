@@ -25,13 +25,11 @@
 </div>
 <script>
     var c=document.getElementById("myCanvas");
-    var uml = new NutUml(c);
-    uml.debug=true
-
+    nutuml.setKeep(true);
     window.addEventListener('message', event => {
         const message = event.data;
         console.log('Webview接收到的消息：', message);
-        uml.drawUml(message.text);
+        c.innerHTML = nutuml.render(message.text);
     });
 </script>
 </body>

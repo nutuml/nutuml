@@ -1,6 +1,6 @@
 import {Mindmap} from './mindmap/Mindmap'
 import utils from './utils'
-import { Sequence } from './sequence'
+import { Sequence } from './sequence/sequence'
 
 const sequence = new Sequence();
 const mindmap = new Mindmap();
@@ -15,6 +15,9 @@ function render(text:string) {
         default:
             return sequence.render(text);
     }
+}
+function setKeep(keep:boolean){
+    sequence.keep = keep;
 }
 enum Lang{
     SEQUENCE,
@@ -39,5 +42,6 @@ function detectLang(str:string):Lang{
     return Lang.SEQUENCE;
 }
 export default{
-    render
+    render,
+    setKeep
 }

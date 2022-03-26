@@ -13,7 +13,7 @@ export default function analysis(str:string,context:MindContext):MindToken[] {
      */
     let tokens = [];
     var curLine =1;
-    while(cur < str.length) {       
+    while(cur < str.length) {
         if(/\s/.test(str[cur])) { // skip space
             if(newLines.includes(str[cur])){
                curLine++;
@@ -33,7 +33,15 @@ export default function analysis(str:string,context:MindContext):MindToken[] {
                 value += str[cur++];
             }
             tokens.push(new MindToken(curLine, value.trim(), TokenType.VALUE));
-
+        }else{
+            // ignore other line
+            while(cur < str.length){
+                if(newLines.includes(str[cur])){
+                    curLine++;
+                    break;
+                }
+                cur++;
+            }
         }
     }
     context.tokens = tokens;

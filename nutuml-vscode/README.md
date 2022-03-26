@@ -4,7 +4,7 @@ Nutuml is a tool for uml sequence  diargram. You can edit UML description text i
 
 ## Quick start
 
-### Use Nutuml in stand alone file 
+### Use Nutuml in markdown file
 
 1. Create or open a markdown file with the suffix **.md**
 2. Input uml description text, a demo as follow
@@ -41,7 +41,29 @@ Below is a gif to show the demo.
 
 For more syntax reference. please refer to [nutuml homepage](https://www.nutuml.com/) 
 
+### Mindmap support
+1. Create or open a markdown file with the suffix **.md**
+2. Input uml description text, a demo as follow
+
+<pre>
+```nutuml
+# Root
+## aa
+## bb
+## cc
+```
+</pre>
+
+
+1. Click the **Preview** button on the right top of the editor.
+
+Below is a picture to show the demo.
+![Quick start demo](images/mindmap.png)
+
 ## Release Notes
+### 0.6.0
+1. support mindmap
+
 ### 0.5.0 
 1. fix offset erro when participant is too long.
 
