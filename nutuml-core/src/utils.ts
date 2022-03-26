@@ -1,40 +1,29 @@
-import {
-    select,create
-} from 'd3';
-
 import { TextConfig } from './config/constant';
 
 const lineBreakRegex = /<br\s*\/?>/gi;
 
-const drawSimpleText = function (elem:any, textData:TextObj) {
+const textId = "nut-tmp-text-666"
+
+const drawSimpleText = function (svg:any, textData:TextObj) {
   // Remove and ignore br:s
   const nText = textData.text.replace(lineBreakRegex, ' ');
+  
+  let text = "<text id='" + textId + "'"
+        text += 'x="' + textData.x + '" ';
+        text += 'y="' + textData.y + '" ';
+        
+        text += 'style="font-size:' + textData.config.fontSize + 
+             'px;font-weight:'+ textData.config.fontWeight + ';font-family:' + textData.config.fontFamily + '"'
+        text += 'fill="' + textData.config.textColor + '">' 
+        text += nText
+        text += '</text>\n';
+  svg.innerHTML = text;
 
-  const textElem = elem.append('text');
-  textElem.attr('x', textData.x);
-  textElem.attr('y', textData.y);
-  textElem.style('text-anchor', textData.anchor);
-  textElem.style('font-family', textData.fontFamily);
-  textElem.style('font-size', textData.fontSize);
-  textElem.style('font-weight', textData.fontWeight);
-  textElem.attr('fill', textData.fill);
-  if (typeof textData.class !== 'undefined') {
-    textElem.attr('class', textData.class);
-  }
-
-  const span = textElem.append('tspan');
-  span.attr('x', textData.x + textData.textMargin * 2);
-  span.attr('fill', textData.fill);
-  span.text(nText);
-
-  return textElem;
 };
 class TextObj{
     x: number;
     y: number;
     fill: string;
-    anchor: string;
-    style: string;
     width: number;
     height: number;
     textMargin: number;
@@ -42,17 +31,13 @@ class TextObj{
     ry: number;
     valign: string;
     text:string;
-    fontFamily:string;
-    fontSize:string;
-    fontWeight:string;
-    class:string;
+    config:TextConfig;
 }
 const getTextObj = function () {
     let textObj = new TextObj();
     textObj.x =0;
     textObj.y = 0;
-    textObj.anchor = 'start';
-    textObj.style = '#666';
+    textObj.fill = '#666';
     textObj.width = 100;
     textObj.height = 100;
     textObj.textMargin = 0;
@@ -97,29 +82,21 @@ const calculateTextDimensions = memoize(
     const lines = text.split(lineBreakRegex);
     let dims = [];
 
-    const body = select("body");
-    // We don't want to leak DOM elements - if a removal operation isn't available
-    // for any reason, do not continue.
-    if (!body.remove) {
-      return { width: 0, height: 0, lineHeight: 0 };
-    }
-
-    const g = body.append('svg');
-    g.attr("width","500");
-    g.attr("height","500")
-
+    const body = document.getElementsByTagName("body")[0];
+    
+    let svg = document.createElement("svg");
+    body.appendChild(svg);
+    
     for (let fontFamily of fontFamilies) {
       let cheight = 0;
       let dim = { width: 0, height: 0, lineHeight: 0 };
       for (let line of lines) {
         const textObj = getTextObj();
         textObj.text = line;
-        const textElem = drawSimpleText(g, textObj)
-          .style('font-size', fontSize)
-          .style('font-weight', fontWeight)
-          .style('font-family', fontFamily);
-
-        let bBox = (textElem._groups || textElem)[0][0].getBBox();
+        textObj.config = config;
+        drawSimpleText(svg, textObj);
+        let textElem = document.getElementById(textId);
+        let bBox = textElem.getBoundingClientRect();
         dim.width = Math.round(Math.max(dim.width, bBox.width));
         cheight = Math.round(bBox.height);
         dim.height += cheight;
@@ -128,7 +105,7 @@ const calculateTextDimensions = memoize(
       dims.push(dim);
     }
 
-    g.remove();
+    svg.remove();
 
     let index =
       isNaN(dims[1].height) ||

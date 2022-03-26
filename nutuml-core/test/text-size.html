@@ -8,14 +8,20 @@
     <title>NutUml Example</title>
 </head>
 <body>
-
-<div id="myCanvas" style="border:1px solid #c3c3c3;"></div>
+<div id="t"></div>
     
 <script type="text/javascript">
-var c=document.getElementById("myCanvas");
-var umlText = "Client -> Server : Request\n"
-    + "Server -> Client : Response";
-c.innerHTML = nutuml.render(umlText);
+var t=document.getElementById("t");
+const ROOT_TEXT_CONFIG = {
+    fontSize:28,
+    fontWeight:400,
+    fontFamily:'Arial',
+    horizonSpace:50,
+    verticalSpace:40,
+    backgroundColor:'#0081E8',
+    textColor:'#FFF'
+}
+t.innerHTML = "width:" +  nutuml.utils.calculateTextDimensions("Root",ROOT_TEXT_CONFIG).width;
 </script>
 </body>
 </html>

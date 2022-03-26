@@ -1,6 +1,6 @@
 const path = require('path');
 module.exports = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/index.ts',
     devtool: 'source-map',
     devServer: {
@@ -19,8 +19,8 @@ module.exports = {
       extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
-      filename: 'nutuml.js',
-      path: path.resolve(__dirname, 'dist'),
+      filename: 'nutuml.min.js',
+      path: path.resolve(__dirname,'../dist'),
       library: {
         name: 'nutuml',
         type: 'umd',

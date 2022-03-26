@@ -1,15 +1,15 @@
 {
   "name": "nutuml",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "a tool to generate uml diagram",
-  "main": "index.js",
+  "main": "dist/nutuml.js",
   "type": "modules",
   "scripts": {
     "build": "webpack",
+    "release": "webpack --config config/webpack.release.js --progress --color",
     "start": "webpack serve --open"
   },
   "devDependencies": {
-    "@types/d3": "^7.1.0",
     "@types/lodash": "^4.14.178",
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.4",
@@ -18,7 +18,7 @@
     "webpack-dev-server": "^4.7.3"
   },
   "dependencies": {
-    "d3": "^7.3.0"
+
   },
   "repository": {
     "type": "git",
