@@ -5,6 +5,7 @@
   "main": "dist/nutuml.js",
   "type": "modules",
   "scripts": {
+    "tsc": "tsc",
     "build": "webpack",
     "release": "webpack --config config/webpack.release.js --progress --color",
     "start": "webpack serve --open"
