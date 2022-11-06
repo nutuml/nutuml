@@ -6,7 +6,7 @@ import { ROOT_TEXT_CONFIG, FIRST_TEXT_CONFIG, SECOND_TEXT_CONFIG } from "../conf
 import { STATE } from "./State";
 const PAGE_PADDING = 50;
 
-const NODE_SPAN = 100;
+const NODE_SPAN = 200;
 
 class GridItem{
     x:number;

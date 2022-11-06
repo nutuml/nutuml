@@ -1,4 +1,6 @@
+import { STATE } from "./State";
 import StateContext from "./StateContext";
+import StateEdge from "./StateEdge";
 import StateNode from "./StateNode";
 
 const FRAME_PADDING = 10;
@@ -9,26 +11,79 @@ export default function draw(context:StateContext):string {
     if(!nodes){
         return;
     }
+    let edges = context.edges;
+    for(let i=0;i<edges.length;i++){
+        let edge = edges[i];
+        html += drawEdge(edge);
+    }
     for(let i=0;i<nodes.length;i++){
         let node = nodes[i];
-        html += drawOneNode(node);
+        if(node.name === STATE.START){
+            html += drawStart(node);
+        }else if(node.name === STATE.END){
+            html += drawEnd(node);
+        }else{
+            html += drawOneNode(node);
+        }
     }
-    
     html += "</svg>"
     return html;
 }
+function drawEdge(edge:StateEdge){
+    let arrow = '';
+    if(edge.from.centerY < edge.to.centerY && edge.from.centerX === edge.to.centerX){
+        // 从上 往下
+        let arrowX = edge.from.centerX;
+        let arrowY = edge.to.centerY - edge.to.height/2;
+        arrow = drawArrow(arrowX, arrowY,90);
+    }else if(edge.from.centerY === edge.to.centerY && edge.from.centerX < edge.to.centerX){
+        // 从左 往右
+        let arrowX = edge.to.centerX - edge.to.width/2;
+        let arrowY = edge.to.centerY;
+        arrow = drawArrow(arrowX, arrowY,0);
+    }
+
+
+    let e = '<line x1="' + edge.from.centerX + '" y1="'+ edge.from.centerY + 
+        '" x2="'+ edge.to.centerX + '" y2="' + edge.to.centerY + '" ' + 
+        'style="stroke:rgb(0,0,0);stroke-width:1"/>\n'
+        return arrow + e
+}
+function drawStart(node:StateNode){
+    let circle = '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="15" stroke="black" stroke-width="2" fill="black"/>\n'
+    return circle;
+}
+
+function drawEnd(node:StateNode){
+    let circle = '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="15" stroke="black" stroke-width="1" fill="white" />\n'
+     circle += '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="10" stroke="black" stroke-width="0" fill="black"/>\n'
+
+    return circle;
+}
+function drawArrow(x:number,y:number,rotate:number){
+    var xDelta =-12;
+    var xDelta2 =-7;
+    var yDelta =-5;
+    
+    
+    let arrow = `<path d="M${x} ${y} L${x + xDelta} ${y + yDelta} L${x + xDelta2} ${y}
+         L${x + xDelta} ${y - yDelta}  Z" style="fill: black;" transform="rotate(${rotate},${x},${y})" />\n`;
+
+    return arrow;
+
+}
 function drawOneNode(node:StateNode){
     let rectX = node.centerX - node.width/2;
-    let rectY = node.centerY - (node.height - FRAME_PADDING)/2;
+    let rectY = node.centerY - (node.height)/2;
     let rectWidth = node.width;
-    let rectHeight = (node.height - FRAME_PADDING);
+    let rectHeight = node.height;
     let rect = "<rect ";
     rect += 'x="' + rectX + '" ';
     rect += 'y="' + rectY + '" ';
     rect += ' rx="5" ry="5" ';
     rect += 'width="' + rectWidth + '" ';
     rect += 'height="' + rectHeight + '" ';
-    rect += 'style="fill:' + node.textConfig.backgroundColor  + ';fill-opacity:1" ';
+    rect += 'style="fill:' + node.textConfig.backgroundColor  + ';fill-opacity:1;stroke-width:1;stroke:rgb(0,0,0)" ';
     rect += "/>"
    
 
