@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "a tool to generate uml diagram",
   "main": "dist/nutuml.js",
-  "type": "modules",
+  "type": "commonjs",
   "scripts": {
     "tsc": "tsc",
     "build": "webpack",

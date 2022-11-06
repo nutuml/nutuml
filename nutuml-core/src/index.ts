@@ -2,10 +2,12 @@ import {Mindmap} from './mindmap/Mindmap'
 import utils from './utils'
 import { Sequence } from './sequence/sequence'
 import RenderResult from './common/RenderResult';
+import { State } from './state/State';
 
 const sequence = new Sequence();
 sequence.keep = true;
 const mindmap = new Mindmap();
+const state = new State();
 
 let lastHtml = "";
 
@@ -17,6 +19,9 @@ function render(text:string) {
             return sequence.render(text);
         case Lang.MINDMAP:
             result = mindmap.render(text);
+            break;
+        case Lang.STATE:
+            result = state.render(text);
             break;
         default:
             return sequence.render(text);
@@ -41,7 +46,8 @@ function setKeep(keep:boolean){
 }
 enum Lang{
     SEQUENCE,
-    MINDMAP
+    MINDMAP,
+    STATE
 }
 function detectLang(str:string):Lang{
     let cur = 0;
@@ -58,6 +64,9 @@ function detectLang(str:string):Lang{
     }
     if(word.startsWith("#") || word.startsWith("@mindmap")){
         return Lang.MINDMAP;
+    }
+    if(word.startsWith("@state")){
+        return Lang.STATE;
     }
     return Lang.SEQUENCE;
 }
