@@ -60,8 +60,8 @@ export default function calc(context:StateContext):void {
     calcSize(context);
     calcXY(context);
 
-    context.svgWidth = 400;
-    context.svgHeight = 400;
+    context.svgWidth = 1200;
+    context.svgHeight = 800;
 }
 function calcSize(context:StateContext){
     let textConfig = FIRST_TEXT_CONFIG;
@@ -113,6 +113,9 @@ function calcGrid(context: StateContext) {
     context.startNode.gridY = gy;
     gridMap.set(gridKey(gx,gy),1);
 
+    let minGx = 0;
+    let minGy = 0;
+
     let arr:GridBatch[] = [];
     arr.push({
         gx:gx,
@@ -127,15 +130,30 @@ function calcGrid(context: StateContext) {
         if(node.nodes === undefined || node.nodes.length==0){
             continue;
         }
+        let j=0;
         for(let i=0;i<node.nodes.length;i++){
             let n = node.nodes[i];
             if(map.has(n.name)){
                 continue;
             }
-            let item = getGrid(i);
-            n.gridX = node.gx + item.x;
-            n.gridY = node.gy + item.y;
-            map.set(n.name,1);
+            while(true){
+                let item = getGrid(j++);
+                n.gridX = node.gx + item.x;
+                n.gridY = node.gy + item.y;
+                if(gridMap.has(gridKey(n.gridX,n.gridY))){
+                    continue;
+                }
+                map.set(n.name,1);
+                gridMap.set(gridKey(n.gridX,n.gridY),1);
+                if(n.gridX<minGx){
+                    minGx = n.gridX;
+                }
+                if(n.gridY<minGy){
+                    minGy = n.gridY;
+                }
+                break;
+            }
+            
             arr.push({
                 gx: n.gridX,
                 gy: n.gridY,
@@ -143,6 +161,7 @@ function calcGrid(context: StateContext) {
             })
         }
     }
+    fixGrid(context,minGx,minGy);
 }
 function getGrid(i:number):GridItem{
     if(i<0){
@@ -199,5 +218,15 @@ function calcEdges(context: StateContext) {
    context.headNodes.sort(nodeSort)
    context.tailNodes.sort(nodeSort)
    context.nodes.sort(nodeSort)
+}
+
+function fixGrid(context: StateContext, minGx: number, minGy: number) {
+    let nodes = context.nodes;
+    let xSpan = 0-minGx;
+    let ySpan =0-minGy;
+    nodes.map((item)=>{
+        item.gridX += xSpan;
+        item.gridY += ySpan;
+    })
 }
 
