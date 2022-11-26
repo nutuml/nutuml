@@ -8,7 +8,6 @@ export default class StateNode {
 
     description:string;
     //子节点
-    children?:StateNode[];
     parent?:StateNode;
 
     nextNodes?:StateNode[];
@@ -37,12 +36,6 @@ export default class StateNode {
         this.title = title;
     }
 
-    addChild(node:StateNode):void{
-        if(this.children===undefined){
-            this.children = [];
-        }
-        this.children.push(node);
-    }
     addNexNodes(node:StateNode):void{
         if(this.nextNodes===undefined){
             this.nextNodes = [];

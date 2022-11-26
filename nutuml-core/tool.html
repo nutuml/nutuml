@@ -28,7 +28,19 @@
     </footer>
 </div>
 <script>
-    
+const calcState = `@state
+[*] --> 未计算
+未计算 --> 队列中
+队列中 --> 计算中
+计算中 -> 成功
+计算中 -> 失败
+
+成功 -> 队列中
+失败 -> 队列中
+
+未计算 --> [*]
+成功 -> [*]
+失败 -> [*]`
 new Vue({
     data: {
         textarea: `@state
@@ -38,24 +50,7 @@ State1 : this is a string
 State1 : this is another string
 
 State1 -> State2
-State1 -> State3
-State1 -> State4
-State1 -> State5
-State1 -> State6
-State1 -> State7
-State1 -> State8
-State1 -> State9
 
-State3 -> State1
-State3 -> State10
-State3 -> State11
-State3 -> State12
-State3 -> State13
-State3 -> State14
-State3 -> State15
-State3 -> State16
-State3 -> State17
-State3 -> State18
 
 State2 --> [*]`
     },

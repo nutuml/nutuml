@@ -5,6 +5,13 @@ import calc from "./StateCalc";
 import draw from "./StateDraw";
 import RenderResult from "../common/RenderResult";
 
+
+/**
+ * 状态图
+ * 1. 父节点在上面，子节点在下
+ * 2. 力求达到 所有节点间 总距离最短。 优先考虑与子节点的距离最短
+ * 3. 当状态成环时。允许子节点在上
+ */
 export class State{
     render(text:string):RenderResult{
         let context = new StateContext();

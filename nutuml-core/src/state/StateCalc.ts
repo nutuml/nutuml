@@ -17,44 +17,6 @@ class GridBatch {
     gy:number;
     nodes:StateNode[];
 }
-/**
- * 按以下格子 排列坐标，
- * 24  23  20  21  22
- * 19   8   6   7  18
- * 14   4   0   2  10
- * 16   5   1   3  12
- * 15  17   9  13  11
- * 
- */
-const GRID_ARR = [
-//1-8
-    [0,1],
-    [1,0],
-    [1,1],
-    [-1,0],
-    [-1,1],
-    [0,-1],
-    [1,-1],
-    [-1,-1],
-// 9-24
-    [0,2],
-    [2,0],
-    [2,2],
-    [2,1],
-    [1,2],
-    [-2,0],
-    [-2,2],
-    [-2,1],
-    [-1,2],
-    [2,-1],
-    [-2,-1],
-    [0,-2],
-    [1,-2],
-    [2,-2],
-    [-1,-2],
-    [-2,-2]
-
-]
 
 export default function calc(context:StateContext):void {
     calcSize(context);
@@ -102,75 +64,19 @@ function calcXY(context:StateContext){
  */
 function calcGrid(context: StateContext) {
     calcEdges(context);
-    if(context.startNode=== undefined){
-        context.error =" No [*] start node found."
-        return;
-    }
-    let gx = 0;
-    let gy = 0;
-    let gridMap = new Map();
-    context.startNode.gridX = gx;
-    context.startNode.gridY = gy;
-    gridMap.set(gridKey(gx,gy),1);
-
-    let minGx = 0;
-    let minGy = 0;
-
-    let arr:GridBatch[] = [];
-    arr.push({
-        gx:gx,
-        gy:gy,
-        nodes:context.headNodes
-    })
-    let map = new Map();
-    map.set(context.startNode.name,1);
-
-    while(arr.length>0){
-        let node = arr.pop()
-        if(node.nodes === undefined || node.nodes.length==0){
+    let gridArr = [];
+    gridArr[0] =[];
+    //记录 是否已处理过
+    var map = new Map();
+    for(var i in context.edges){
+        var edge = context.edges[i];
+        var node = edge.from;
+        if(map.has(node.name)){
             continue;
         }
-        let j=0;
-        for(let i=0;i<node.nodes.length;i++){
-            let n = node.nodes[i];
-            if(map.has(n.name)){
-                continue;
-            }
-            while(true){
-                let item = getGrid(j++);
-                n.gridX = node.gx + item.x;
-                n.gridY = node.gy + item.y;
-                if(gridMap.has(gridKey(n.gridX,n.gridY))){
-                    continue;
-                }
-                map.set(n.name,1);
-                gridMap.set(gridKey(n.gridX,n.gridY),1);
-                if(n.gridX<minGx){
-                    minGx = n.gridX;
-                }
-                if(n.gridY<minGy){
-                    minGy = n.gridY;
-                }
-                break;
-            }
-            
-            arr.push({
-                gx: n.gridX,
-                gy: n.gridY,
-                nodes: n.nextNodes
-            })
-        }
+        oneNodeGrid(gridArr,node);
+        map.set(node.name,1);
     }
-    fixGrid(context,minGx,minGy);
-}
-function getGrid(i:number):GridItem{
-    if(i<0){
-        return {x:-1,y:-1};
-    }
-    if(i>= GRID_ARR.length){
-        return {x: i%5 ,y: Math.round(i/5 -2)}
-    }
-    return {x:GRID_ARR[i][0], y:GRID_ARR[i][1]}
 }
 function gridKey(gx:number,gy:number){
     return gx + ',' + gy;
@@ -228,5 +134,101 @@ function fixGrid(context: StateContext, minGx: number, minGy: number) {
         item.gridX += xSpan;
         item.gridY += ySpan;
     })
+}
+
+
+function oneNodeGrid(gridArr: StateNode[][], node: StateNode) {
+    let pFind = node.gridX !== undefined;
+    let cFind = false;
+    
+    node.nextNodes?.map(t=>{
+        if(t.gridX !==undefined){
+            cFind =true;
+        }
+    });
+
+    if(pFind){
+        if(cFind){
+            // 父节点 和 子节点 都在网络上了。
+            let y = node.gridY + 1;
+            if(gridArr[y]===undefined){
+                gridArr[y] = []
+            }
+            for(let j=0;j<node.nextNodes?.length;j++){
+                if(!circle(node,node.nextNodes[j])){
+                    // 无循环引用，子降
+                    let child = node.nextNodes[j];
+                    gridArr[child.gridY][child.gridX] = undefined;
+                    let x = child.gridX;
+                    while(gridArr[y][x]!== undefined){
+                        x++;
+                    }
+                    gridArr[y][x] = child;
+                    child.gridX = x;
+                    child.gridY = y;
+                }
+            }
+        }else{
+            // 父节点 在网格上 子节点不在 。 记录子节点
+            let y = node.gridY + 1;
+            if(gridArr[y]===undefined){
+                gridArr[y] = []
+            }
+            let start = gridArr[y].length;
+            for(let j=0;j<node.nextNodes?.length;j++){
+                gridArr[y][j] = node.nextNodes[j];
+                node.nextNodes[j].gridX = start + j;
+                node.nextNodes[j].gridY = y;
+            }
+        }
+    }else{
+        if(cFind){
+
+        }else{
+            // 父节点 和 子节点 都不在网格上： 初始化 + 记录
+            let x = gridArr[0].length;
+            node.gridX = x;
+            node.gridY = 0;
+            gridArr[0][x] = node;
+            if(gridArr[1]===undefined){
+                gridArr[1] = [];
+            }
+            let start = gridArr[1].length;
+            for(let j=0;j<node.nextNodes?.length;j++){
+                gridArr[1][j] = node.nextNodes[j];
+                node.nextNodes[j].gridX = start + j;
+                node.nextNodes[j].gridY = 1;
+            }
+        }
+    }
+    
+}
+/**
+ * 判断两个节点是否存在 循环引用
+ * @param parent 父节点 
+ * @param child 子节点
+ * @returns 
+ */
+function circle(parent: StateNode, child: StateNode) {
+    var map = new Map();
+    
+    if(child.nextNodes ===undefined){
+        return false;
+    }
+    let arr = [...child.nextNodes]
+    while(arr.length>0){
+        let node = arr.pop();
+        if(node.name === parent.name){
+            return true
+        }else{
+            node.nextNodes?.forEach(t=>{
+                if(!map.has(t.name)){
+                    arr.push(t)
+                }
+            })
+        }
+        map.set(node.name,1)
+    }
+    return false
 }
 
