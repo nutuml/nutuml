@@ -41,25 +41,36 @@ function drawEdge(edge:StateEdge){
         let arrowX = edge.to.centerX - edge.to.width/2;
         let arrowY = edge.to.centerY;
         arrow = drawArrow(arrowX, arrowY,0);
+    }else{
+        if(edge.direction === STATE.RIGHT_DOWN){
+            //右下
+            arrow = drawArrow(edge.toX, edge.toY,90);
+        }else if(edge.direction === STATE.LEFT_DOWN){
+            // 左下
+            arrow = drawArrow(edge.toX, edge.toY,180);
+        }
     }
-
-
-    let e = '<line x1="' + edge.from.centerX + '" y1="'+ edge.from.centerY + 
-        '" x2="'+ edge.to.centerX + '" y2="' + edge.to.centerY + '" ' + 
-        'style="stroke:rgb(0,0,0);stroke-width:1"/>\n'
-        return arrow + e
+    let e = bse(edge.fromX,edge.fromY,edge.toX,edge.toY)
+    return arrow + e
 }
 function drawStart(node:StateNode){
-    let circle = '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="15" stroke="black" stroke-width="2" fill="black"/>\n'
+    let circle = '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="'+ STATE.HEAD_RADIUS +'" stroke="black" stroke-width="2" fill="black"/>\n'
     return circle;
 }
 
 function drawEnd(node:StateNode){
-    let circle = '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="15" stroke="black" stroke-width="1" fill="white" />\n'
+    let circle = '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="'+ STATE.HEAD_RADIUS +'" stroke="black" stroke-width="1" fill="white" />\n'
      circle += '<circle cx="' + node.centerX + '" cy="' + node.centerY + '" r="10" stroke="black" stroke-width="0" fill="black"/>\n'
 
     return circle;
 }
+/**
+ * 画箭头
+ * @param x 顶点x 
+ * @param y 顶点y
+ * @param rotate 角度
+ * @returns 
+ */
 function drawArrow(x:number,y:number,rotate:number){
     var xDelta =-12;
     var xDelta2 =-7;
@@ -100,32 +111,23 @@ function drawOneNode(node:StateNode){
     
     return rect + "\n" + text;
 }
-/**
- *  simple path from x,y to toX,toY ,something like { 
- * @param x 
- * @param y 
- * @param toX 
- * @param toY 
- * @returns 
- */
-function getSimplePath(x:number,y:number,toX:number,toY:number):string{
-    //M10 50 L22 50 L22 80 q 0 10 12 10 L 34 90
-    let midX = (x + toX)/2;
-    let r = 10;
-    if(y==toY){
-        // line only
-        return `M${x} ${y} L${toX} ${toY}`
-    }
-    if(Math.abs(y-toY)<=r){
-        return `M${x} ${y} L${midX} ${y} L${midX} ${toY} L${toX} ${toY}`
-    }
 
-    if(y>toY){
-        let qr = 0- r;
-        let qy = toY+r;
-        return `M${x} ${y} L${midX} ${y} L${midX} ${qy} q 0 ${qr} ${r} ${qr} L${toX} ${toY}`;
-    }else{
-        let qy = toY -r;
-        return `M${x} ${y} L${midX} ${y} L${midX} ${qy} q 0 ${r} ${r} ${r} L${toX} ${toY}`;
+function bse(x,y,toX,toY){
+    let xSpan = toX - x;
+    let ySpan = toY - y;
+    let q = '';
+    if(xSpan>0 && ySpan>0){
+        q =   xSpan + ' ' + '0'
+    }else if(xSpan<0 && ySpan>0){
+        q =  0 + ' ' + ySpan
+    }else {
+        q =   xSpan + ' ' + '0'
     }
+    let line = '<path ';
+    line += 'd=" M ' + x + ' ' + y 
+                        + ' q ' + q + ' ' + (toX-x) + ' ' + (toY-y) + '"';
+                    line += ' stroke-width="1"';
+    line += ' stroke-width="1"';
+    line += ' stroke="#333" fill="none" />\n'
+    return line;
 }

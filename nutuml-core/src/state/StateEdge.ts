@@ -8,8 +8,12 @@ export default class StateEdge {
     to:StateNode;
     
     // 中心点坐标
-    centerX:number;
-    centerY:number;
+    fromX:number;
+    fromY:number;
+    toX:number;
+    toY:number;
+
+    direction: string;
 
     textConfig: TextConfig;
  

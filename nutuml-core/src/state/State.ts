@@ -36,5 +36,9 @@ export class State{
 export const STATE = {
     HEAD:'[*]',
     START: '[*start]',
-    END: '[*end]'
+    END: '[*end]',
+    HEAD_RADIUS : 15,
+    RIGHT_DOWN: 'RIGHT_DOWN',
+    LEFT_DOWN: 'LEFT_DOWN',
+
 }

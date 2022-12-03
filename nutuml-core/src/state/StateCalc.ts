@@ -4,6 +4,7 @@ import utils from "../utils";
 
 import { ROOT_TEXT_CONFIG, FIRST_TEXT_CONFIG, SECOND_TEXT_CONFIG } from "../config/constant";
 import { STATE } from "./State";
+import StateEdge from "./StateEdge";
 const PAGE_PADDING = 50;
 
 const NODE_SPAN = 200;
@@ -21,6 +22,7 @@ class GridBatch {
 export default function calc(context:StateContext):void {
     calcSize(context);
     calcXY(context);
+    clacEdgeXY(context);
 
     context.svgWidth = 1200;
     context.svgHeight = 800;
@@ -34,6 +36,12 @@ function calcSize(context:StateContext){
     for(let i=0;i<nodes.length;i++){
         let node = nodes[i];
         node.textConfig = textConfig;
+
+        if(node.name === STATE.START || node.name === STATE.END){
+            node.width = STATE.HEAD_RADIUS * 2;
+            node.height = STATE.HEAD_RADIUS * 2;
+            continue;
+        }
         let textMeasure = utils.calculateTextDimensions(node.title,textConfig);
         node.textWidth = textMeasure.width;
         node.textHeight = textMeasure.height;
@@ -52,10 +60,24 @@ function calcXY(context:StateContext){
         return;
     }
 
+    // 初步 计算 中心坐标
+    let maxX = []
     for(let i=0;i<nodes.length;i++){
         let node = nodes[i];
-        node.centerX = Math.round( PAGE_PADDING + node.width/2 + NODE_SPAN*node.gridX);
+        let gridX = node.gridX;
+        node.centerX = Math.round( PAGE_PADDING + node.width/2 + NODE_SPAN*gridX);
         node.centerY = Math.round( PAGE_PADDING + node.gridY*100 + node.height/2);
+        if(maxX[gridX]===undefined || maxX[gridX]<node.centerX){
+            maxX[gridX] = node.centerX;
+        }
+    }
+    for(let i=0;i<nodes.length;i++){
+        let node = nodes[i];
+        let gridX = node.gridX;
+
+        if(node.centerX<maxX[gridX]){
+            node.centerX = maxX[gridX]
+        }
     }
 }
 /**
@@ -230,5 +252,107 @@ function circle(parent: StateNode, child: StateNode) {
         map.set(node.name,1)
     }
     return false
+}
+
+function clacEdgeXY(context: StateContext) {
+    for(var i in context.edges){
+        var edge = context.edges[i];
+        calcOneEdge(edge);
+    }
+}
+function calcOneEdge(edge: StateEdge) {
+    var from = edge.from;
+    var to = edge.to;
+    // 上 下 左 右  左上  左下  右上  右下
+    let xSpan = to.gridX - from.gridX
+    let ySpan = to.gridY - from.gridY
+    if(xSpan > 0){
+        // 右
+        edge.fromX = from.centerX + from.width/2
+        edge.fromY = from.centerY
+        if(ySpan>0){
+            // 右下
+            edge.toX = to.centerX
+            edge.toY = to.centerY - to.height/2
+            edge.direction = STATE.RIGHT_DOWN;
+        }else if(ySpan<0){
+            edge.toX = to.centerX
+            edge.toY = to.centerY + to.height/2
+        }else{
+            if(xSpan>0){
+                // 右
+                edge.toX = to.centerX - to.width/2;
+                edge.toY = to.centerY 
+            }else if(xSpan<0){
+                // 左
+                edge.toX = to.centerX + to.width/2;
+                edge.toY = to.centerY 
+            }else{
+                // 同一节点  ，不应该跑到这个逻辑里
+            }
+        }
+    }else if(xSpan< 0){
+        // 左
+        edge.fromX = from.centerX - from.width/2
+        edge.fromY = from.centerY
+        if(ySpan>0){
+            // 左下
+            edge.fromX = from.centerX
+            edge.fromY = from.centerY + to.height/2
+            edge.toX = to.centerX + to.width/2
+            edge.toY = to.centerY
+            edge.direction = STATE.LEFT_DOWN
+        }else if(ySpan<0){
+            edge.toX = to.centerX
+            edge.toY = to.centerY + to.height/2
+        }else{
+            if(xSpan>0){
+                // 右
+                edge.toX = to.centerX - to.width/2;
+                edge.toY = to.centerY 
+            }else if(xSpan<0){
+                // 左
+                edge.toX = to.centerX + to.width/2;
+                edge.toY = to.centerY 
+            }else{
+                // 同一节点  ，不应该跑到这个逻辑里
+            }
+        }
+    }else{
+        // 上下
+        if(ySpan>0){
+            //下
+            edge.fromX = from.centerX
+            edge.fromY = from.centerY + from.height/2
+        }else if(ySpan<0){
+            //上
+            edge.fromX = from.centerX
+            edge.fromY = from.centerY - from.height/2
+        }else{
+            // 同一节点 ，不应该跑到这个逻辑里
+        }
+
+        if(ySpan>0){
+            edge.toX = to.centerX
+            edge.toY = to.centerY - to.height/2
+        }else if(ySpan<0){
+            edge.toX = to.centerX
+            edge.toY = to.centerY + to.height/2
+        }else{
+            if(xSpan>0){
+                // 右
+                edge.toX = to.centerX - to.width/2;
+                edge.toY = to.centerY 
+            }else if(xSpan<0){
+                // 左
+                edge.toX = to.centerX + to.width/2;
+                edge.toY = to.centerY 
+            }else{
+                // 同一节点  ，不应该跑到这个逻辑里
+            }
+        }
+    }
+
+    
 }
 
