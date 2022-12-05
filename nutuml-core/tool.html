@@ -32,27 +32,25 @@ const calcState = `@state
 [*] --> 未计算
 未计算 --> 队列中
 队列中 --> 计算中
-计算中 -> 成功
-计算中 -> 失败
+计算中 --> 成功
+计算中 --> 失败
 
-成功 -> 队列中
-失败 -> 队列中
+成功 --> 队列中
+失败 --> 队列中
 
 未计算 --> [*]
-成功 -> [*]
-失败 -> [*]`
-new Vue({
-    data: {
-        textarea: `@state
+成功 --> [*]
+失败 --> [*]`
+const test2 = `@state
 [*] --> State1
 State1 --> [*]
 State1 : this is a string
 State1 : this is another string
-
 State1 -> State2
-
-
 State2 --> [*]`
+new Vue({
+    data: {
+        textarea: calcState
     },
     watch: {
         textarea: function(){

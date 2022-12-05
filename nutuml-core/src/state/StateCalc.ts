@@ -7,7 +7,7 @@ import { STATE } from "./State";
 import StateEdge from "./StateEdge";
 const PAGE_PADDING = 50;
 
-const NODE_SPAN = 200;
+const NODE_SPAN = 100;
 
 class GridItem{
     x:number;
@@ -176,10 +176,21 @@ function oneNodeGrid(gridArr: StateNode[][], node: StateNode) {
             if(gridArr[y]===undefined){
                 gridArr[y] = []
             }
+
+            let start = gridArr[y].length;
+            if(y%2 === 0){
+                start += 1
+            }
+            
             for(let j=0;j<node.nextNodes?.length;j++){
-                if(!circle(node,node.nextNodes[j])){
+                let child = node.nextNodes[j];
+                if(child.gridX === undefined){
+                    let x = start + 2 * j;
+                    gridArr[y][x] = node.nextNodes[j];
+                    node.nextNodes[j].gridX = x;
+                    node.nextNodes[j].gridY = y;
+                }else if(!circle(node,child)){
                     // 无循环引用，子降
-                    let child = node.nextNodes[j];
                     gridArr[child.gridY][child.gridX] = undefined;
                     let x = child.gridX;
                     while(gridArr[y][x]!== undefined){
@@ -197,9 +208,13 @@ function oneNodeGrid(gridArr: StateNode[][], node: StateNode) {
                 gridArr[y] = []
             }
             let start = gridArr[y].length;
+            if(y%2 === 0){
+                start += 1
+            }
             for(let j=0;j<node.nextNodes?.length;j++){
-                gridArr[y][j] = node.nextNodes[j];
-                node.nextNodes[j].gridX = start + j;
+                let x = start + 2 * j;
+                gridArr[y][x] = node.nextNodes[j];
+                node.nextNodes[j].gridX = x;
                 node.nextNodes[j].gridY = y;
             }
         }
