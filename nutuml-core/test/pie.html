@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NutUml online tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+
+<script src="nutuml.js"></script>
+
+</head>
+<body>
+
+<div id="app" class="container">
+    <h4>Please input</h4>
+    <div class="row">
+        <div class="col-md-4">
+            <textarea style="width:100%; height:360px;" placeholder="Please input content" v-model="textarea"></textarea>
+        </div>
+        <div ref="canvas" class="col-md-8 text-center">
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2020-2021 NutUml</p>
+    </footer>
+</div>
+<script>
+const calcState = `@pie
+title haha
+a: 3
+b: 4
+d: 5
+`
+new Vue({
+    data: {
+        textarea: calcState
+    },
+    watch: {
+        textarea: function(){
+            this.draw(this.$refs.canvas,this.textarea);
+        }
+    },
+    mounted: function() {
+        nutuml.setKeep(true);
+        this.draw(this.$refs.canvas,this.textarea);
+    },
+    methods: {
+        draw: function(canvas,text){
+            canvas.innerHTML = nutuml.render(text);
+        }
+    }
+}).$mount('#app')
+</script>
+</body>
+</html>
+

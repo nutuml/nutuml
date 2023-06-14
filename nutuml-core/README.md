@@ -19,4 +19,33 @@ You can use the follow Code to try. Remember download nutuml.js to your local.
     document.getElementById("test").innerHTML = nutuml.render(text);
 </script>
 ```
+
+## React demo
+
+```
+npm i nutuml
+```
+React code
+
+```
+import nutuml from 'nutuml';
+
+function App() {
+  let img = nutuml.render('Client -> Server : Request\nServer -> Client : Response');
+  return (
+    <div dangerouslySetInnerHTML = {{ __html: img }}>
+    </div>
+  );
+}
+export default App;
+```
+
+for the code above, it will generate a picture as follow:
+
+![img](./img/demo.png)
+
+## Star is welcome
+
+If this project make sense to you, please give me a star.
+
 Thank you!

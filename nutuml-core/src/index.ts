@@ -3,11 +3,14 @@ import utils from './utils'
 import { Sequence } from './sequence/sequence'
 import RenderResult from './common/RenderResult';
 import { State } from './state/State';
+import { Pie } from './pie/Pie';
+
 
 const sequence = new Sequence();
 sequence.keep = true;
 const mindmap = new Mindmap();
 const state = new State();
+const pie = new Pie();
 
 let lastHtml = "";
 
@@ -22,6 +25,9 @@ function render(text:string) {
             break;
         case Lang.STATE:
             result = state.render(text);
+            break;
+        case Lang.PIE:
+            result = pie.render(text);
             break;
         default:
             return sequence.render(text);
@@ -47,7 +53,8 @@ function setKeep(keep:boolean){
 enum Lang{
     SEQUENCE,
     MINDMAP,
-    STATE
+    STATE,
+    PIE
 }
 function detectLang(str:string):Lang{
     let cur = 0;
@@ -67,6 +74,8 @@ function detectLang(str:string):Lang{
     }
     if(word.startsWith("@state")){
         return Lang.STATE;
+    }else if(word.startsWith("@pie")){
+        return Lang.PIE;
     }
     return Lang.SEQUENCE;
 }
