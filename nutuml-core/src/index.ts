@@ -79,7 +79,20 @@ function detectLang(str:string):Lang{
     }
     return Lang.SEQUENCE;
 }
+function init(){
+    let x = document.getElementsByClassName("nutuml");
+    
+    while (x.length>0) {
+        let oldChild = x[0];
+        let text = oldChild.textContent;
+        console.log(text)
+        let ele = document.createElement("div");
+        ele.innerHTML = render(text);
+        oldChild.parentNode.replaceChild(ele,oldChild);
+    }
+}
 export default{
     render,
-    setKeep
+    setKeep,
+    init
 }

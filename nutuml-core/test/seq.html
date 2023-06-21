@@ -4,18 +4,27 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="../bundle.js"></script>
+    <script src="../nutuml.js"></script>
     <title>NutUml Example</title>
 </head>
 <body>
 
-<div id="myCanvas" style="border:1px solid #c3c3c3;"></div>
-    
+<pre class="nutuml">
+Client -> Server : Request
+Server -> Client : Response
+</pre>
+
+<pre class="nutuml">
+# Root
+## haha
+## hehe
+## ooo
+### iiii
+### pppp
+</pre>
+
 <script type="text/javascript">
-var c=document.getElementById("myCanvas");
-var umlText = "Client -> Server : Request\n"
-    + "Server -> Client : Response";
-c.innerHTML = nutuml.render(umlText);
+    nutuml.init();
 </script>
 </body>
 </html>
